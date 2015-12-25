@@ -1,0 +1,57 @@
+NDN_XMLTONDNB(1)
+================
+
+NAME
+----
+ndn_xmltondnb - convert XML into ndn binary encoded data (ndnb)
+
+SYNOPSIS
+--------
+*ndn_xmltondnb* [-hw] [-d 'dict'] 'file' '...'
+
+DESCRIPTION
+-----------
+The *ndn_xmltondnb* converts standard text-based XML into ndn binary encoded (ndnb) form.
+
+OPTIONS
+-------
+*-h*::
+	Print usage and exit.
+
+*-d* 'dict'::
+	Augment the built-in DTAG dictionary with the named file (format like tagname.csvdict).
+	May be repeated.
+	Use this if you have defined some ndnb formats of your own.
+
+*-w*::
+	Toss UDATA content consisting of only whitespace.
+	This is useful if there has been white space added for display purposes (newlines and indentation, for example).
+	For NDNx data (e.g. Interest and ContentObject) you probably always want this.
+
+ARGUMENTS
+---------
+The named files should contain xml data.
+Use *-* to specify filter mode (read standard input, write standard output).
+
+OUTPUT
+------
+If not using filter mode (*-* for the file name), the output file names are generated from the input file names,
+using the extension *.ndnb*.
+Status and diagnostic messages appear on standard error.
+
+The output may be converted back into regular XML by using the *ndn_ndnbtoxml* utility.
+
+EXIT STATUS
+-----------
+*0*::
+     Success
+
+*nonzero*::
+     Failure (syntax or usage error, file not found)
+
+SEE ALSO
+--------
+*ndn_ndnbtoxml*(1)
+
+Michael Plass
+

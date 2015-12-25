@@ -1,0 +1,41 @@
+# tests/test_child_selector
+# 
+# Part of the NDNx distribution.
+#
+# Portions Copyright (C) 2013 Regents of the University of California.
+# 
+# Based on the CCNx C Library by PARC.
+# Copyright (C) 2009 Palo Alto Research Center, Inc.
+#
+# This work is free software; you can redistribute it and/or modify it under
+# the terms of the GNU General Public License version 2 as published by the
+# Free Software Foundation.
+# This work is distributed in the hope that it will be useful, but WITHOUT ANY
+# WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
+# FOR A PARTICULAR PURPOSE.
+#
+AFTER : test_single_ndnd
+BEFORE : test_single_ndnd_teardown
+
+for ver in 0 1 2 3; do
+  for blk in 0 1 2 3 4; do
+    echo "block $blk in version $ver" | ndnpoke -f /test/child_selector/$ver/$blk
+  done
+done
+
+ndn_xmltondnb -w - <<EOF >child_selector.ndnb
+<Interest>
+  <Name>
+    <Component ndnbencoding="text">test</Component>
+    <Component ndnbencoding="text">child_selector</Component>
+  </Name>
+  <ChildSelector>1</ChildSelector>
+</Interest>
+EOF
+
+ndndsmoketest -b child_selector.ndnb recv > child_selector_reply.ndnb
+ndnbx -d child_selector_reply.ndnb Content > child_selector_got.txt
+echo "block 0 in version 3" > child_selector_expected.txt
+diff child_selector_got.txt child_selector_expected.txt || Fail did not get expected
+
+rm -f child_selector*.ndnb child_selector*.txt

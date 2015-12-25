@@ -1,0 +1,4 @@
+/**
+ * @package org.ndnx.ndn.io.content
+ * Support for Network Objects -- objects that serialize and deserialize themselves automatically to NDN.
+ */

@@ -1,0 +1,65 @@
+NDNDSTART(1)
+============
+
+NAME
+----
+ndndstart - Start ndnd in the background and set up forwarding according to configuration
+
+SYNOPSIS
+--------
+*ndndstart*
+
+DESCRIPTION
+-----------
+The *ndndstart* utility starts ndnd in the background.
+*ndndstart* looks for configuration of forwarding information in
+'$HOME/.ndnx/ndnd.conf'; refer to *ndndc(1)* for the format.
+If *ndnd* is already running, it will be shut down and restarted;
+any manually-configured forwarding (with *ndndc*) will need to be re-executed.
+
+*ndndstart* will start using default values for 'NDND_CAP', 'NDND_DEBUG' and
+the default port 9695 for 'NDN_LOCAL_PORT'.  These environment values may
+be set to change the cache size, *ndnd* debug logging, and port number, respectively.
+The values may be set in '$HOME/.ndnx/ndndrc', which is sourced at startup.
+
+OPTIONS
+-------
+
+This utility does not have have flags or arguments.
+
+These environment variables are handled by *ndndstart*:
+
+     NDND_LOG
+     NDND_PRELOAD
+
+'NDND_LOG' is the name of the log file.  If none is specified, the
+log output appears on *stderr*.
+
+'NDND_PRELOAD' is a list of file names for files containing ndnb-encoded
+content objects.  These will be preloaded into the ndnd's cache at startup.
+See *ndnrm(1)* for one way to make such a file.
+
+If the environment variable 'NDNR_GLOBAL_PREFIX' is set, *ndndstart* will
+also start an instance of the *ndnr* repository, using the directory
+'$HOME/.ndnx/repository' to contain the backing files.
+Additional configuration for this instance may be placed in the file
+'$HOME/.ndnx/repository/config'.
+
+Please see *ndnd(1)* and *ndnr(1)* for additional environment variables.
+
+EXIT STATUS
+-----------
+*0*::
+     Success
+
+*1*::
+     Failure
+
+FILES
+-----
+    $HOME/.ndnx/ndnd.conf
+    $HOME/.ndnx/ndndrc
+
+AUTHOR
+------
+Michael Plass

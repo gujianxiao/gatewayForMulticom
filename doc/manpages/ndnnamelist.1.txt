@@ -1,0 +1,44 @@
+NDNNAMELIST(1)
+================
+
+NAME
+----
+ndnnamelist - extract names from a file of ndnb encoded data
+
+SYNOPSIS
+--------
+*ndnnamelist* [-h] ['file' '...']
+
+DESCRIPTION
+-----------
+The *ndnnamelist* command prints on standard output a list of names from binary encoded data in one or more files.
+
+OPTIONS
+-------
+*-h*::
+	Print the usage message.
+
+ARGUMENTS
+---------
+The named files should contain ndnb-encoded data.  A "-" in the file list indicates input from stdin.
+If no arguments are given input will be read from stdin.
+
+OUTPUT
+------
+A list of NDNx URI format names is produced on standard output.
+Any errors due to malformed input will result in a message on stderr
+
+EXIT STATUS
+-----------
+*0*::
+     Success
+
+*nonzero*::
+     Failure (syntax or usage error, file not found)
+
+SEE ALSO
+--------
+*ndn_splitndnb*(1)
+
+Nick Briggs
+

@@ -1,0 +1,165 @@
+#!/usr/bin/env bash
+
+OPENSSL=openssl
+HEXDUMP=hexdump
+if [ `uname` == "Linux" ]; then
+    BASE64="base64 -i"
+else
+    BASE64="base64"
+fi
+SED=sed
+XXD=xxd
+
+function usage {
+  if [ "x$1" != "x" ]; then
+    echo $1 >&2
+  fi
+  cat <<EOF
+Usage:
+    $0 [-h] [-p] -i <identity> <key_file> 
+
+        -h print this help message
+        -p publish key in repo (recommended)
+        -i specify the real-world identity of the key owner
+
+      If necessary to specify a specific private key (.ndnx_keystore) file that should be used for signing 
+      purposes, plese configure NDNX_DIR or HOME environmental variables.
+      If NDNX_DIR is set, the script will use the key from $NDNX_DIR/.ndnx_keystore.
+      Otherwise, the script will attempt user the key from $HOME/.ndnx/.ndnx_keystore
+
+      Keystore password can be defined through NDNX_KEYSTORE_PASSWORD environment variable,
+      if not explicitly defined, the default NDNx keystore password will be used
+
+      The script performs the following operations:
+          - reads public key <key_file>,
+          - creates content object with name <prefix-of-published-key>/%C1.M.K<sha256(key-bits)>/<version>/<segment>
+          - signs it with key <path-to-signing-key-direcotry>/.ndnx_keystore
+          - puts KeyLocator: <prefix-of-signing-key>/%C1.M.K<sha256(signing-key-bits)>
+          - publishes content object to local repo
+          - writes a pub_cert file for the key owner that contains the key and info objects
+EOF
+
+  exit 1
+}
+
+function error {
+    echo -e "\E[91mERROR: $1\E[0m"
+}
+
+REPO_WRITE=0
+
+while getopts "hi:p" flag; do
+    case "$flag" in
+        i) IDENTITY=$OPTARG ;;
+        p) REPO_WRITE=1 ;;
+
+        h | ?)
+            usage
+            ;;
+    esac
+done
+
+PEM_FILE=${@:$OPTIND:1}
+
+if [ "x$PEM_FILE" == "x" ]; then
+    error "Incorrect parameter usage"
+    usage
+fi
+
+if [ ! -f "$PEM_FILE" ]; then
+    error "Cannot open [$PEM_FILE] for reading"
+    exit 1
+fi
+
+if [ "x$IDENTITY" == "x" ]; then
+    error "Please use -i <identity> command line option to specify identity for the signed certificate"
+    exit 1
+fi
+
+if [ "x$NDNX_DIR" != "x" ]; then
+    KEYSTORE="$NDNX_DIR/.ndnx_keystore"
+    export NDNX_DIR
+else
+    KEYSTORE="$HOME/.ndnx/.ndnx_keystore"
+    export HOME
+fi
+
+if [ ! -f "$KEYSTORE" ]; then
+    error "[$KEYSTORE] file not found or insufficient permissions to read the file"
+    error "Please check permissions or configure NDNX_DIR or HOME variables"
+    exit 1
+fi
+
+export KEY_PASSWORD=${NDNX_KEYSTORE_PASSWORD:-"Th1s1sn0t8g00dp8ssw0rd."}
+
+SIGNKEYURI=`ndn-pubkey-name`
+META=`ndn-pubkey-name | $SED -e 's|^\(.*\)\(/%C1\.M\.K.*\)$|\1/info\2|g'`
+PREFIX=`ndn-pubkey-name | $SED -e 's|^\(.*\)\(/%C1\.M\.K.*\)$|\1|g'`
+
+if [ "x$SIGNKEYURI" == "x" -o "x$META" == "x" -o "$META" == "$SIGNKEYURI" -o "x$PREFIX" == "x" -o "$PREFIX" == "$SIGNKEYURI" ]; then
+    error ".pubcert file has not been installed or invalid"
+    error "Please check if .pubcert file is installed or contact your system administrator to obtain .pubcert file"
+    exit 1
+fi
+
+AFFILIATION=`ndnpeek -cv $META 2>/dev/null | $SED -e 's|.*<Name>\(.*\)</Name>.*|\1|g'`
+VALID_TO=`ndnpeek -cv $META 2>/dev/null | $SED -e 's|.*<Valid_to>\(.*\)</Valid_to>.*|\1|g'`
+
+if [ "x$AFFILIATION" == "x" -o "x$VALID_TO" == "x" ]; then
+    error "Public key meta information for key [$SIGNKEYURI] is not found"
+    error "Please check if [$META] is published or contact your system administrator"
+    exit 1
+fi
+
+PUBCERT="$(dirname $PEM_FILE)/$(basename $PEM_FILE .pem).pubcert"
+
+pubkey_base64=`$OPENSSL x509 -in "$PEM_FILE" -pubkey -noout | $OPENSSL rsa -pubin -pubout -inform PEM -outform DER 2> /dev/null | $BASE64 | tr -d '\n\r\f'`
+pubkey_binhash=`echo $pubkey_base64 | $BASE64 --decode | $OPENSSL dgst -sha256 -binary | $HEXDUMP -v -e '1/1 "^%02x"' | sed -e 's/\^/\%/g'`
+
+info_base64=`echo "<Meta><Name>$IDENTITY</Name><Affiliation>$AFFILIATION</Affiliation><Valid_to>$VALID_TO</Valid_to></Meta>" | $BASE64 | tr -d '\n\r\f'`
+
+export KEY_PASSWORD=${NDNX_KEYSTORE_PASSWORD:-"Th1s1sn0t8g00dp8ssw0rd."}
+
+function sign_and_publish {
+   URL=$1
+   BASE64_CONTENT=$2
+
+   echo $BASE64_CONTENT | $BASE64 --decode | NDNX_DIR=$SIGNKEY ndnpoke -f -x 2000 -t KEY -l -k "$SIGNKEYURI" "$URL/%00"
+
+   if [ $REPO_WRITE -eq 1 ]; then
+       # Request interest from repo
+       repo_command="$URL/%C1.R.sw/`openssl rand 20 2>/dev/null | $XXD -p`"
+       ndnpeek -w 2 -s 1 "$repo_command" > /dev/null
+       RET=$?
+       if [ ! $RET -eq 0 ]; then
+           error "repo is not responding (not running) or wrong repo command [$repo_command]"
+       fi
+   fi
+}
+
+TIME=`date -u +%s`
+VERSION=`printf "%.10x" $TIME | $XXD -r -p | $HEXDUMP -v -e '1/1 "^%02x"' | $SED -e 's/\^/\%/g'`
+
+PREFIX="$PREFIX/$IDENTITY"
+
+KEY_URL="$PREFIX/%C1.M.K%00$pubkey_binhash/%FD%01$VERSION"
+INFO_URL="$PREFIX/info/%C1.M.K%00$pubkey_binhash/%FD%01$VERSION"
+
+sign_and_publish "$KEY_URL" "$pubkey_base64"
+sign_and_publish "$INFO_URL" "$info_base64"
+
+ndnpeek "$KEY_URL" > "$PUBCERT"
+RES1=$?
+ndnpeek "$INFO_URL" >> "$PUBCERT"
+RES2=$?
+
+echo $KEY_URL
+echo $INFO_URL
+
+if [ $RES1 -ne 0 ] || [ $RES2 -ne 0 ]; then
+    error "Signing failed, please check parameters or contact your system administrator"
+    exit 1
+fi
+
+echo -e "\E[92mKeys signed and published\E[0m"
+echo -e "Please install [$PUBCERT] file using ndn-install-pubcert command (see ndn-install-pubcert -h for more info)"

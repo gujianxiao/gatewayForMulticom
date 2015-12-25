@@ -1,0 +1,31 @@
+# multicast/settings
+# 
+# Part of the NDNx distribution.
+#
+# Portions Copyright (C) 2013 Regents of the University of California.
+# 
+# Based on the CCNx C Library by PARC.
+# Copyright (C) 2009 Palo Alto Research Center, Inc.
+#
+# This work is free software; you can redistribute it and/or modify it under
+# the terms of the GNU General Public License version 2 as published by the
+# Free Software Foundation.
+# This work is distributed in the hope that it will be useful, but WITHOUT ANY
+# WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
+# FOR A PARTICULAR PURPOSE.
+#
+export NDN_LOCAL_PORT=63981
+export PATH=`(cd ../../bin && pwd)`:$PATH
+: ${NDND_CAP:=200}
+: ${NDND_DATA_PAUSE_MICROSEC:=10000}
+export NDND_CAP NDND_DATA_PAUSE_MICROSEC
+
+SELF=`hostname | cut -d . -f 1`
+DATAHOST=pepe
+HTTPPORT=8080 # for using tcp as the experimental control
+DATASET=1e7
+PIPELINE=20
+MULTICAST_ADDRESS=224.0.0.65
+MULTICAST_PORT=62009
+NDND_DATA_PAUSE_MICROSEC=5000
+NDND_CAP=100000

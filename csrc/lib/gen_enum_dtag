@@ -1,0 +1,23 @@
+#!/bin/sh
+# lib/gen_enum_dtag
+# 
+# Part of the NDNx distribution.
+#
+# Portions Copyright (C) 2013 Regents of the University of California.
+# 
+# Based on the CCNx C Library by PARC.
+# Copyright (C) 2009 Palo Alto Research Center, Inc.
+#
+# This work is free software; you can redistribute it and/or modify it under
+# the terms of the GNU General Public License version 2 as published by the
+# Free Software Foundation.
+# This work is distributed in the hope that it will be useful, but WITHOUT ANY
+# WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
+# FOR A PARTICULAR PURPOSE.
+#
+Commentize () {
+  test -z $1 && echo && return 0
+  echo '	/*' $1 '*/'
+}
+file ../../schema/tagname.csvdict >&2 || exit 1
+tr ',' ' ' <../../schema/tagname.csvdict | while read i j k; do printf '    %s' "NDN_DTAG_$j = $i,"; Commentize "$k"; done

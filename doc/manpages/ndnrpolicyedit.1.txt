@@ -1,0 +1,55 @@
+NDNRPOLICYEDIT(1)
+================
+
+NAME
+----
+ndnrpolicyedit - edit policy.xml
+
+SYNOPSIS
+--------
+*ndnrpolicyedit*
+
+DESCRIPTION
+-----------
+The *ndnrpolicyedit* command provides a convenient way to edit the policy associated
+with a repository instance.
+
+The true repository policy is stored in a content object in the repo itself.
+It is encoded in ndnb format,
+which is not directly editable with the usual tools, such as a text editor.
+To cope with this,
+*ndnrpolicyedit* works by translating the ndnb form to a normal text-based
+xml encoding in a temporary copy, calling a text editor on this copy, and 
+then translating back to ndnb before storing the updated policy in the repo.
+
+OPTIONS
+-------
+None.
+
+ARGUMENTS
+---------
+None.
+
+ENVIRONMENT
+-----------
+The value of *NDNR_GLOBAL_PREFIX* controls the repository instance that is
+to be configured.
+The usual way to set this is by editing ~/.ndnx/ndndrc
+The value of *EDITOR* may be used to specify what text editor should be
+called to do the actual editing.  The default is *vi*.
+
+EXIT STATUS
+-----------
+*0*::
+     Success
+
+*nonzero*::
+     Failure (syntax or usage error, file not found)
+
+FILES
+-----
+*$$~/.ndnx/ndnd.conf,  ~/.ndnx/ndndrc, ~/.ndnx/repository/config$$*
+
+AUTHOR
+------
+Michael Plass

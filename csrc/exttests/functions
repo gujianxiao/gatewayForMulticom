@@ -1,0 +1,139 @@
+# tests/functions
+#
+# Functions for supporting the test_* scripts
+#
+# Part of the NDNx distribution.
+#
+# Portions Copyright (C) 2013 Regents of the University of California.
+# 
+# Based on the CCNx C Library by PARC.
+# Copyright (C) 2009-2011 Palo Alto Research Center, Inc.
+#
+# This work is free software; you can redistribute it and/or modify it under
+# the terms of the GNU General Public License version 2 as published by the
+# Free Software Foundation.
+# This work is distributed in the hope that it will be useful, but WITHOUT ANY
+# WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
+# FOR A PARTICULAR PURPOSE.
+#
+
+BEFORE () {
+  : Used by testdriver for determining test order
+}
+
+AFTER () {
+  : Used by testdriver for determining test order
+}
+
+Fail () {
+  echo "***" Failing $TESTNAME - $*
+  exit 1
+}
+
+Failed () {
+  Fail Failed $*
+}
+
+SkipTest () {
+  echo "***" Skipping $TESTNAME - $*
+  exit 9
+}
+
+LongTest () {
+  [ "$MAKE_TEST_TARGET" = "check" ] && SkipTest make target is \'check\'
+}
+
+WithNDND () {
+  local port;
+  port=$((NDN_LOCAL_PORT_BASE+$1))
+  shift
+  NDN_LOCAL_PORT=$port "$@"
+}
+
+CheckForNDND () {
+  WithNDND $1 ndndsmoketest && return 0
+  echo "***" ndnd $1 is not ready yet ... >&2
+  return 1
+}
+
+NDNDStatus () {
+  echo 'GET / ' | ndndsmoketest -b -T localhost send - recv recv
+}
+
+Linkup () {
+  local A B
+  A=$((NDN_LOCAL_PORT_BASE+$1))
+  B=$((NDN_LOCAL_PORT_BASE+$2))
+  shift 2
+  test $A -ne $B || Fail FIXME
+  env NDN_LOCAL_PORT=$A ndndc add / udp localhost $B
+  env NDN_LOCAL_PORT=$B ndndc add / udp localhost $A
+}
+
+ExpectLines () {
+  local file lines minimum maximum
+  lines=`wc -l < $1` || Fail
+  file=$1
+  minimum=$2
+  maximum=$3
+  shift 3
+  test $lines -ge $minimum || Fail Expecting at least $minimum lines in ${file}, got $lines $*
+  test $lines -le $maximum || Fail Expecting at most $maximum lines in ${file}, got $lines $*
+  return 0
+}
+
+GenSym () {
+  echo $1`openssl rand -base64 12 | tr '/+' '-_'`
+}
+
+##
+# Start ndnd with specified capacity and minimal logging
+CappedNDNDStart () {
+  [ ${1:=missing} -ge 0 ] || Fail argument missing or invalid: $1
+  WHICHNDND=${NDN_LOCAL_PORT:-9695}
+  ndndsmoketest kill 2>/dev/null
+  env NDND_DEBUG=7 NDND_CAP=$1 ndnd 2>>ndnd$((WHICHNDND % 10))-capped-$1.out &
+  ndndsmoketest -u localhost -t 50 recv >/dev/null
+  ndndsmoketest >/dev/null
+}
+
+##
+# Create a repo containing a file of the requested size
+GenerateRepoTestData () { (
+  [ ${1:=missing} -ge 1000 ] || Fail argument missing or invalid: $1
+  export NDNR_DIRECTORY=${NDNR_TEST_REPOS:-.}/staged.$1
+  if [ -f $NDNR_DIRECTORY/index/stable ]; then
+     echo $NDNR_DIRECTORY
+     return 0 
+  fi
+  rm -R $NDNR_DIRECTORY 2>/dev/null
+  mkdir -p $NDNR_DIRECTORY || return 1
+  WithNDND 3 CappedNDNDStart 100
+  WithNDND 3 env NDNR_DEBUG=0 ndnr &
+  rm testfile 2>/dev/null
+  dd bs=1 count=1 seek=$(($1 - 1)) of=testfile if=/dev/zero
+  WithNDND 3 SyncTest -cat2 -put testfile ndn:/test/bulk/${1}.dat
+  rm testfile
+  WithNDND 3 ndnrm -o $NDNR_DIRECTORY/cached-keys.out /ndnx.org
+  WithNDND 3 ndndstop
+  sleep 1
+  echo $NDNR_DIRECTORY
+  return 0
+) }
+
+##
+# Given a repo directory, choose a likely versioned name.
+GetTestDataVersionedName () {
+  ndnnamelist $1/repoFile1 | head -n 40 | grep -v %C1.M | tail -n 1 | \
+    sed -e 's@/[%=]00[^/]*$@@'
+}
+
+##
+#
+DoPS () {
+  ps aux | grep -w -e '[M]EM' -e '[c]cnd$' -e '[c]cnr$' -e '[j]ava'
+}
+
+RunTest () {
+  ( . settings; . functions; . $1 )
+}

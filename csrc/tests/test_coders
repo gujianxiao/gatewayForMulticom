@@ -1,0 +1,25 @@
+# tests/test_coders
+#
+# Tests marshalling and unmarshalling of misc element types
+# 
+# Part of the NDNx distribution.
+#
+# Portions Copyright (C) 2013 Regents of the University of California.
+# 
+# Based on the CCNx C Library by PARC.
+# Copyright (C) 2009 Palo Alto Research Center, Inc.
+#
+# This work is free software; you can redistribute it and/or modify it under
+# the terms of the GNU General Public License version 2 as published by the
+# Free Software Foundation.
+# This work is distributed in the hope that it will be useful, but WITHOUT ANY
+# WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
+# FOR A PARTICULAR PURPOSE.
+#
+
+for i in 14 15 18; do
+  test -f ../../schema/validation/ndn-test$i.xml || SkipTest missing source
+  ndn_xmltondnb -w - <../../schema/validation/ndn-test$i.xml > test_coders_$i.ndnb
+  basicparsetest < test_coders_$i.ndnb || Fail test_coders_$i.ndnb
+done
+rm test_coders_*.ndnb

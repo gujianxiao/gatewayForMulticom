@@ -1,0 +1,27 @@
+#!/bin/sh
+# multicast/startndnd
+# 
+# Part of the NDNx distribution.
+#
+# Portions Copyright (C) 2013 Regents of the University of California.
+# 
+# Based on the CCNx C Library by PARC.
+# Copyright (C) 2009 Palo Alto Research Center, Inc.
+#
+# This work is free software; you can redistribute it and/or modify it under
+# the terms of the GNU General Public License version 2 as published by the
+# Free Software Foundation.
+# This work is distributed in the hope that it will be useful, but WITHOUT ANY
+# WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
+# FOR A PARTICULAR PURPOSE.
+#
+. ./settings
+file `which ndnd`
+ndndsmoketest kill 2>/dev/null || :
+test -f $SELF-ndnd.log && mv $SELF-ndnd.log $SELF-ndnd.log~
+ndnd 2>$SELF-ndnd.log &
+ndndsmoketest
+date | ndnpoke -f -x 60 ndn:/experiments/multicast/hosts/$SELF
+ndnrm -o presence.ndnb ndn:/experiments/multicast/hosts/$SELF
+ndndc add ndn:/experiments/multicast udp $MULTICAST_ADDRESS $MULTICAST_PORT
+head -n 30 $SELF-ndnd.log settings

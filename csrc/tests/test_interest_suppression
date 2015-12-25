@@ -1,0 +1,103 @@
+# tests/test_interest_suppression
+# 
+# Part of the NDNx distribution.
+#
+# Portions Copyright (C) 2013 Regents of the University of California.
+# 
+# Based on the CCNx C Library by PARC.
+# Copyright (C) 2010, 2011 Palo Alto Research Center, Inc.
+#
+# This work is free software; you can redistribute it and/or modify it under
+# the terms of the GNU General Public License version 2 as published by the
+# Free Software Foundation.
+# This work is distributed in the hope that it will be useful, but WITHOUT ANY
+# WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
+# FOR A PARTICULAR PURPOSE.
+#
+
+AFTER : test_single_ndnd
+BEFORE : test_single_ndnd_teardown
+
+#
+# Test to verify that similar interests from different faces
+# don't all get forwarded.
+#
+
+#
+# Start up a ndnd to field our flurry of requests
+#
+WithNDND 4 env NDND_DEBUG=7 ndnd 2>ndnd4.out &
+WithNDND 4 ndndsmoketest    	# Let forked ndnd get going
+trap "WithNDND 4 ndndstop" 0 	# Tear it down at end of test
+
+#
+# Construct the test interest
+#
+UNIQ=`GenSym TIS`
+ndn_xmltondnb -w - <<EOF >unanswered.ndnb
+<Interest>
+  <Name>
+    <Component ndnbencoding="text">unanswered</Component>
+    <Component ndnbencoding="text">test</Component>
+    <Component ndnbencoding="text">$UNIQ</Component>
+  </Name>
+</Interest>
+EOF
+
+#
+# Set up forwarding for test
+#
+#  0 <--- 4
+#
+UP=$NDN_LOCAL_PORT_BASE
+WithNDND 4 ndndc add /unanswered/test tcp localhost $UP || SkipTest Unable to register prefix
+
+
+dd if=/dev/zero bs=1 count=1 of=heartbeat.ndnb
+
+#
+# Send the interest from 50 sources (simulated external)
+#
+I=0
+while [ $I -lt 50 ]; do
+	WithNDND 4 ndndsmoketest -u localhost send unanswered.ndnb >/dev/null
+	I=$((I+1))
+done
+
+#
+# Send the interest from 25 sources (apps)
+#
+while [ $I -lt 75 ]; do
+	WithNDND 4 ndndsmoketest -t 1 -u localhost send heartbeat.ndnb recv send unanswered.ndnb recv
+	I=$((I+1))
+done
+
+#
+# Send the interest from 10 unix-domain sources (apps)
+#
+while [ $I -lt 80 ]; do
+	WithNDND 4 ndndsmoketest -t 1 send unanswered.ndnb recv
+	I=$((I+1))
+done
+
+#
+# Record status snapshot
+#
+WithNDND 4 ndndstatus > int-supp-ndnd4-status-A.out
+ndndstatus > int-supp-ndnd0-status-A.out
+
+#
+# Let things settle a bit before teardown.
+#
+sleep 4
+WithNDND 4 ndndstatus > int-supp-ndnd4-status-B.out
+ndndstatus > int-supp-ndnd0-status-B.out
+
+#
+# See how we did.
+#
+COUNT=`grep -c "interest_to.*/unanswered/" ndnd4.out`
+echo COUNT=$COUNT
+[ $COUNT -gt 5 ] && Fail more copies of interest than expected - $COUNT
+[ $COUNT -lt 1 ] && Fail fewer copies of interest than expected - $COUNT
+true

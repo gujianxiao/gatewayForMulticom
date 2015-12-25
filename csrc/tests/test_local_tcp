@@ -1,0 +1,34 @@
+# tests/test_local_tcp
+# 
+# Part of the NDNx distribution.
+#
+# Portions Copyright (C) 2013 Regents of the University of California.
+# 
+# Based on the CCNx C Library by PARC.
+# Copyright (C) 2013 Palo Alto Research Center, Inc.
+#
+# This work is free software; you can redistribute it and/or modify it under
+# the terms of the GNU General Public License version 2 as published by the
+# Free Software Foundation.
+# This work is distributed in the hope that it will be useful, but WITHOUT ANY
+# WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
+# FOR A PARTICULAR PURPOSE.
+#
+AFTER : test_single_ndnd
+BEFORE : test_single_ndnd_teardown
+
+: > hello42.out || SkipTest hello42
+WithNDND 4 env NDND_DEBUG=-1 ndnd 2>locotcp.out &
+trap "WithNDND 4 ndndstop" 0  # Tear it down at end of test
+{ sleep 5 && WithNDND 4 ndndstop; } &
+WATCHDOG=$!
+PORT4=$((NDN_LOCAL_PORT_BASE+4))
+ndnc -r 'read i && echo Hello $i' /test/locotcp &
+WithNDND 4 ndndsmoketest || SkipTest No ndnd 4
+ndndc add / tcp 127.0.0.1 $PORT4
+CONNECTBACK=`WithNDND 4 ndndstatus | grep remote | cut -f 7- -d :`
+[ $((CONNECTBACK)) -gt 0 ] || CONNECTBACK=`sleep 1; WithNDND 4 ndndstatus | grep remote | cut -f 7- -d :`
+WithNDND 4 ndndc add / tcp 127.0.0.1 $CONNECTBACK || Fail Unable to forward back
+WithNDND 4 ndnc -r 'echo 42 && read x && echo $x > hello42.out' /test/locotcp
+kill $WATCHDOG
+grep "Hello.*42" hello42.out || Fail did not get ack

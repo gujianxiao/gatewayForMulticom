@@ -1,0 +1,11 @@
+<?xml version="1.0"?>
+<Interest>
+  <Name/>
+  <Exclude>
+    <Bloom ndnbencoding="base64Binary">AQZN</Bloom>
+    <Component ndnbencoding="base64Binary">2obhHzDz</Component>
+    <Any/>
+    <Component ndnbencoding="base64Binary">3obhHzDz</Component>
+  </Exclude>
+  <Nonce ndnbencoding="base64Binary">2obhHzDz</Nonce>
+</Interest>

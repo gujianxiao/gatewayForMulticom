@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="introduction">
+    This app shows the different ways of starting NDNx services and of working with the
+    NDNx-Android-Lib and NDNx-Android-Services libraries.
+    </string>
+    <string name="app_name">NDNx StartupExamples</string>
+</resources>

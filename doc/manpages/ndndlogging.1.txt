@@ -1,0 +1,37 @@
+NDNDLOGGING(1)
+==============
+
+NAME
+----
+ndndlogging - change the log level of a running ndnd
+
+SYNOPSIS
+--------
+*ndndlogging [-T host] ( none | low | co | med | high )*
+
+DESCRIPTION
+-----------
+The *ndndlogging* utility changes the effective log level of a running *ndnd*.
+
+OPTIONS
+-------
+*-T host*::
+     Control the *ndnd* instance running on the specified host, instead of the current host.
+
+ARGUMENT
+--------
+The command takes one argument, the desired level.
+This maps into an appropriate setting of the effective *NDND_DEBUG* setting.
+The levels are *none*, *low*, *co*, *med*, and *high*.
+The *co* level shows content objects, but not interests (*NDND_DEBUG*=4);
+the others should be self-explanatory.
+
+ENVIRONMENT
+-----------
+The 'NDN_LOCAL_PORT' environment variable may be used to identify
+the port that the *ndnd* instance is using; if unset, the default
+port number (9695) is used.
+
+AUTHOR
+------
+Michael Plass

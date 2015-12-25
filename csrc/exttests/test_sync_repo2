@@ -1,0 +1,110 @@
+# exttests/test_sync_repo2
+# 
+# Part of the NDNx distribution.
+#
+# Portions Copyright (C) 2013 Regents of the University of California.
+# 
+# Based on the CCNx C Library by PARC.
+# Copyright (C) 2011 Palo Alto Research Center, Inc.
+#
+# This work is free software; you can redistribute it and/or modify it under
+# the terms of the GNU General Public License version 2 as published by the
+# Free Software Foundation.
+# This work is distributed in the hope that it will be useful, but WITHOUT ANY
+# WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
+# FOR A PARTICULAR PURPOSE.
+#
+
+AFTER : test_twohop_ndnd_teardown test_sync_read
+
+# TOPO to assume (must be routable for ndnd)
+TOPO=/Topo
+# slice hash for $TOPO /root/beer
+RH=/%C9R%A1%9EK%0D8%22%C8R%83%C8J%E5%15%07%B5%03%226%F3%CE%9Fz%19~T%9B%18%AAc%F3
+
+NAMES=256
+BS=4096
+TARGET="treeNames $NAMES"
+
+# proc to create an empty repo bound to ndnd N
+
+StartEmptyRepo () {
+  env | grep NDNR
+  N=$1
+  NDNR_NAME="repo.$N"
+  export NDNR_DIRECTORY=${NDNR_TEST_REPOS:-.}/$NDNR_NAME.dir
+  rm -Rf $NDNR_DIRECTORY
+  mkdir $NDNR_DIRECTORY
+  echo in StartRepo $N, $NDNR_DIRECTORY
+  ndnr 2>ndnr.$N.err >ndnr.$N.log
+}
+
+# proc to wait for a non-empty sync tree in repo N
+
+WaitRepoLeaves () {
+  N=$1
+  while true; do
+    { WithNDND $N SyncTest -scope 1 -stats $TOPO $RH >stats$N.txt ; } || Fail "Can't get stats"
+    { grep -w "$TARGET" stats$N.txt >/dev/null ; } && break
+    printf "."
+    sleep 1 || SkipTest
+  done
+  printf "\n"
+}
+
+# setup appropriate NDNR and SYNC env variables
+
+export NDNR_DEBUG=INFO
+export NDNS_ENABLE=1
+export NDNS_DEBUG=INFO
+export NDNS_REPO_STORE=1
+export NDNS_STABLE_ENABLED=0
+export NDNS_FAUX_ERROR=0
+
+# start 2 ndnd instances
+
+rm -f ndnd1.out ndnd2.out
+WithNDND 1 ndnd 2>ndnd1.out &
+WithNDND 2 ndnd 2>ndnd2.out &
+
+until CheckForNDND 1 && CheckForNDND 2; do
+  echo Waiting ... >&2
+  sleep 1
+done
+
+# point ndnd 1 and ndnd 2 at each other
+
+Linkup 1 2
+Linkup 2 1
+
+rm -f test.data check.data
+dd bs=$BS count=$NAMES if=/dev/zero of=test.data 2>/dev/null
+
+echo -- Start and init repo 1
+
+WithNDND 1 StartEmptyRepo 1 &
+WithNDND 1 SyncTest -scope 1 -slice $TOPO /root/beer 
+WithNDND 1 SyncTest -scope 1 -bs $BS -put test.data ndn:/root/beer/float
+WithNDND 1 ndnrm ndn:/root/beer
+WaitRepoLeaves 1
+
+echo -- Start and init repo 2
+WithNDND 2 StartEmptyRepo 2 &
+WithNDND 2 SyncTest -scope 1 -bs $BS -slice $TOPO /root/beer 
+echo -- Wait for sync and fetch data
+
+WaitRepoLeaves 2
+
+echo -- Kill repo 1, flush ndnd 2, then fetch data from repo 2
+WithNDND 1 ndndsmoketest kill
+WithNDND 2 ndnrm ndn:/root/beer
+WithNDND 2 SyncTest -scope 1 -bs $BS -get ndn:/root/beer/float check.data
+WithNDND 2 ndndsmoketest kill
+
+echo -- Checking output
+
+diff test.data check.data || Fail data not equal
+
+rm -f test.data check.data
+rm -Rf repo.*.dir
+

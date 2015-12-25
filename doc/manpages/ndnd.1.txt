@@ -1,0 +1,175 @@
+NDND(1)
+=======
+
+NAME
+----
+ndnd - NDNx Daemon
+
+SYNOPSIS
+--------
+*ndnd* [-h]
+
+DESCRIPTION
+-----------
+*ndnd* is not normally executed directly. Use *ndndstart(1)* to run an
+instance of ndnd. *ndnd* normally runs indefinitely.  Use
+*ndndsmoketest(1)* to terminate a *ndnd* (or use *kill(1)*).
+
+*ndnd* is the software forwarder/router for NDNx and is required for
+normal NDNx protocol communication.  The typical configuration is to
+run one *ndnd* on each host; applications running on the host will
+communicate through the local *ndnd*, and it will communicate over
+attached networks (directly or through a link adapter process).
+
+*ndnd* takes no options on the command-line. Basic options are controlled
+by environment variables. The forwarding table (FIB) is populated with
+registration protocols over NDNx.  Use *ndndc(1)* for configuring the
+FIB.
+
+*ndnd* communicates via the NDNx protocol running over UDP, TCP, or
+Unix domain sockets (the latter for local processes only). It also
+provides a simple web status view over HTTP, on the `NDN_LOCAL_PORT`.
+
+
+OPTIONS
+-------
+*-h*::
+	Print a usage message describing environment variables.
+
+ENVIRONMENT
+-----------
+
+Options for *ndnd* are set via environment variables. 
+
+    NDND_DEBUG=
+      0 - no messages
+      1 - basic messages (any non-zero value gets these)
+      2 - interest messages
+      4 - content messages
+      8 - matching details
+      16 - interest details
+      32 - gory interest details
+      64 - log occasional human-readable timestamps
+      128 - face registration debugging
+      bitwise OR these together for combinations; -1 gets max logging
+    NDN_LOCAL_PORT=
+      UDP port for unicast clients (default 9695).
+      Also listens on this TCP port for stream connections.
+      Also affects name of unix-domain socket.
+    NDN_LOCAL_SOCKNAME=
+      Name stem of unix-domain socket (default /tmp/.ndnd.sock).
+    NDND_CAP=
+      Capacity limit, in count of ContentObjects.
+      Not an absolute limit.
+    NDND_MTU=
+      Packet size in bytes.
+      If set, interest stuffing is allowed within this budget.
+      Single items larger than this are not precluded.
+    NDND_DATA_PAUSE_MICROSEC=
+      Adjusts content-send delay time for multicast and udplink faces
+    NDND_DEFAULT_TIME_TO_STALE=
+      Default for content objects without explicit FreshnessSeconds,
+      in seconds.  Must be positive.
+    NDND_MAX_TIME_TO_STALE=
+      Limit, in seconds, until content becomes stale.  Must be positive.
+      If necessary, this will be reduced to the largest value
+      that the implemementation can enforce.
+    NDND_MAX_RTE_MICROSEC=
+      Value used to limit response time estimates kept by default strategy.
+    NDND_KEYSTORE_DIRECTORY=
+      Directory readable only by ndnd where its keystores are kept
+      Defaults to a private subdirectory of /var/tmp
+    NDND_LISTEN_ON=
+      List of ip addresses to listen on; defaults to wildcard. The
+      addresses may be enclosed in square brackets.  The list elements
+      are separated by whitespace, commas, or semicolons.  Both IPv4 and
+      IPv6 addresses may be used.  Set this if you want to limit
+      connectivity to a particular set of configured addresses.
+      The most useful non-default setting is probably "localhost".
+      Note that outgoing tcp connections may still be made.
+    NDND_AUTOREG=
+      List of prefixes to auto-register on new faces initiated by peers.
+      The prefixes are represented as ndnx URIs, and
+      are separated by whitespace, commas, or semicolons.
+      If this is specified, the ndnd can be used as a "hub" to forward
+      interests matching these prefixes to any peer that talks to it.
+      example: NDND_AUTOREG=ndn:/ndnx.org/Users,ndn:/ndnx.org/Chat
+    NDND_PREFIX=
+      A prefix stem to use for generating guest prefixes.
+
+NAME SPACES
+-----------
+After *ndnd* starts, control of its behavior takes place using NDNx protocols.
+For more information, please refer to
+link:../technical/NameConventions.html[NameConventions]
+int the technical documentation.
+
+This is where ndnd publishes its key, using the service discovery profile:
+
+    ndn:/%C1.M.S.localhost/%C1.M.SRV/ndnd
+
+For the benefit of neighboring nodes, the key is published here as well:
+
+    ndn:/%C1.M.S.neighborhood/%C1.M.SRV/ndnd
+
+The following is the main prefix used to communicate with this instance of ndnd.
+Here +<ndndid>+ refers to the SHA256 digest of the ndnd's public key.
+Note that, for historical reasons, this does not use the key marker convention.
+Each instance of ndnd may be assumed to be using a distict public key.
+See link:../technical/Registration.html[Registration] for a description of
+the protocols used in in this namespace.
+
+    ndn:/ndnx/<ndndid>
+
+A stream of face status changes may be obtained through the the name below.
+This uses the standard versioning and segmentation profiles, so a utility
+such as *ndncat* may be used to read it.  At present, only one version of
+the stream is started when it is requested for the first time, so a program
+that needs to access it should start shortly after *ndnd* and run as long as
+the *ndnd* instance is around. The format of this stream is a simple
+text-based one.
+
+    ndn:/ndnx/<ndndid>/notice.txt
+
+When two ndnds begin exchanging interest and data, an automatic handshake
+takes place to agree upon a name prefix that both nodes can use to refer
+to the communication channel.
+This prefix is registered on each node to forward interests to the other.
+An example of such a prefix is
+
+    ndn:/%C1.M.FACE/%C1.M.G%00%00XL%DB%F0%0A%0APn%0F%B1%F2%1F
+
+The first name component is always the same.
+The second component is a randomly-generated guid, with a guid marker.
+(These guids are abbreviated below to make them easier to read.)
+
+As a byproduct of this handshake,
+each ndnd creates a content object that represents its endpoint.
+For example:
+
+    ndn:/%C1.M.FACE/%C1.M.G%00%00XL42/%C1.M.NODE/%C1.M.K%00...1/face~7/%FD...
+    ndn:/%C1.M.FACE/%C1.M.G%00%00XL42/%C1.M.NODE/%C1.M.K%00...2/face~9/%FD...
+
+The third component is the constant +%C1.M.NODE+,
+to allow the remainder if the namespace to be used for other purposes.
+The fourth component is the ndndid, with the key digest marker.  These have
+been abbreviated in the example.
+The fifth component is the faceid, in decimal ascii,
+with a leading distinguisher of 'face~'.
+The remaining two components are for standard versioning and segmentation.
+
+Currently there is no payload in these content objects.
+This is subject to change.
+
+EXIT STATUS
+-----------
+*0*::
+     Success
+
+*1*::
+     Failure (syntax or usage error)
+
+AUTHOR
+------
+Michael Plass
+

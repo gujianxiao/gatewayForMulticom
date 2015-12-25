@@ -1,0 +1,80 @@
+NDNDSMOKETEST(1)
+================
+
+NAME
+----
+ndndsmoketest - Simple program for smoke-test of ndnd.
+
+SYNOPSIS
+--------
+*ndndsmoketest* [-b] [-t 'msec'] [ (-T | -u) 'hostname' ] ( send 'filename' | 'sendfilename'.ndnb | recv | kill | status [-x] | timeo 'msec' ) '...'
+
+DESCRIPTION
+-----------
+The *ndndsmoketest* is a simple program for sending and receiving data on sockets, for the purpose of testing ndnd.
+
+Most of what this program does could be done with *nc*(1) (aka netcat).
+It intentionally understands almost nothing about NDNx protocols.
+
+
+OPTIONS
+-------
+*-b*::
+	Binary output on stdout instead of the default hex.
+
+*-t* 'milliseconds'::
+	Set the timeout for recv commands (default is 1000, or 1 second).
+
+*-T* 'hostname'::
+	Contact the ndnd on the named host via TCP instead of the default unix-domain socket.
+
+*-u* 'hostname'::
+	Contact the ndnd on the named host via UDP instead of the default unix-domain socket.
+
+*-x*::
+	Use in conjunction with status command, returns XML output on stdout
+
+ARGUMENTS
+---------
+The remaining arguments are processed in order.
+
+*send* 'filename'::
+	Send the contents of the named file.
+	Use '-' to read from stdin.
+
+*sendfilename*.ndnb::
+	If the file extension is *.ndnb*, the *send* verb may be omitted.
+
+*recv*::
+	Recv one chunk (packet) and write the result to stdout (hex by default, but see -b).
+	Times out with a message to stderr if nothing is received.
+
+*kill*::
+	Shuts down ndnd cleanly.
+
+*status*::
+	Used to implement *ndndstatus*(1).  Pass optional [-x] argument to request XML output.
+    See link:../technical/NDNDStatus.html[NDND Status XML documentation] for more details.
+
+*timeo* 'milliseconds'::
+	Set the timeout for subsequent recv commands.
+
+OUTPUT
+------
+Hex by default, but binary output may be requested with -b.
+
+
+EXIT STATUS
+-----------
+*0*::
+     Success
+
+*nonzero*::
+     Failure (syntax or usage error, file not found)
+
+SEE ALSO
+--------
+*ndndstop*(1), *ndndstatus*(1)
+
+Michael Plass
+

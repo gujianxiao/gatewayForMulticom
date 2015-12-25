@@ -1,0 +1,33 @@
+# tests/test_single_ndnd
+# 
+# Part of the NDNx distribution.
+#
+# Portions Copyright (C) 2013 Regents of the University of California.
+# 
+# Based on the CCNx C Library by PARC.
+# Copyright (C) 2009, 2011 Palo Alto Research Center, Inc.
+#
+# This work is free software; you can redistribute it and/or modify it under
+# the terms of the GNU General Public License version 2 as published by the
+# Free Software Foundation.
+# This work is distributed in the hope that it will be useful, but WITHOUT ANY
+# WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
+# FOR A PARTICULAR PURPOSE.
+#
+BEFORE : test_single_ndnd_teardown
+
+NDND_DEBUG=7 NDND_CAP=100 ndnd 2>ndnd0.out &
+sleep .1 2>/dev/null
+ndndsmoketest || { echo retrying; sleep 1; ndndsmoketest; }
+
+export NDNR_DIRECTORY=${NDNR_TEST_REPOS:-.}/testrepoA
+
+rm -R $NDNR_DIRECTORY 2>/dev/null
+mkdir $NDNR_DIRECTORY || Fail could not create $NDNR_DIRECTORY
+NDNR_DEBUG=FINE ndnr 2>ndnrA.out &
+[ $? -eq 0 ] || Fail ndnr startup failed
+echo Hello World | ndnseqwriter -r -b 2 ndn:/hello/world || Fail /hello/world
+test -f $NDNR_DIRECTORY/repoFile1 || Fail do you know where the repo file landed\?
+ndnnamelist $NDNR_DIRECTORY/repoFile1 || Fail ndnnamelist
+ndnrm ndn:/hello
+ndncat ndn:/hello/world || Fail content did not come back from repo.

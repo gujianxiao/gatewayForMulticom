@@ -1,0 +1,110 @@
+NDNPUTMETA(1)
+=============
+
+NAME
+----
+ndnputmeta - Associate a file with NDNx Content as metadata
+
+SYNOPSIS
+--------
+*ndnputmeta* [-javaopts '<options>'] [-debug '<portno>'] [-v] [-raw] [-unversioned] [-local | -allownonlocal] [-timeout 'millis'] [-log 'LEVEL'] 'ndnxname' 'metaname' 'filename|url'
+
+DESCRIPTION
+-----------
+The *ndnputmeta* utility publishes a local file 'filename' or url 'url' as
+metadata associated with the content 'ndnxname'. The metadata is published as 
+as of NDNx Data in accordance with the naming conventions for segmented 
+streams or files, optionally unversioned. For the default case of versioned 
+content, *ndnputmeta* will publish the metadata with the version based on the 
+local machine time and will associate it with the latest version of the
+referenced NDNx content.
+
+The 'ndnxname' must be specified using the NDNx URI encoding
+syntax. For simple cases of ASCII name components this is just
+pathname syntax with / delimiters.
+
+The 'metaname' must be the relative path of the metadata for the specified
+ndnxname, for example '_thumbnail_/image'.
+
+The 'filename' must be the pathname of a local file that will published under
+the 'ndnxname'.
+
+The 'url' must be a valid url to be published under a 'ndnxname'.
+
+*ndnputmeta* will publish versioned and segmented meta data objects, and the 
+key used to sign them, to a repository by default.  If there is not a reachable
+repository, *ndnputmeta* will exit with a 'wait for put drain' error.  If
+there is a corresponding application able to retrieve the content
+*ndnputmeta* can be used to publish the content with '-raw'. However no
+such application is currently supported. '-raw' allows *ndnputmeta* to skip 
+the repository handshake and directly put the content objects to satisfy the
+interests expressed by the reader application.
+
+*ndnputmeta* can also be used to publish metadata with a specific key using
+'-as' where 'pathToKeystore' must be a valid path to the local filesystem
+where a user key has previously been stored.
+
+*ndnputmeta* can additionally be used with access control using the '-ac' flag.
+
+
+OPTIONS
+-------
+*-v*::
+     Run *ndnputmeta* in verbose mode.
+
+*-raw*::
+     *ndnputmeta* will publish the metadata without contacting a
+     repository.  This mode will fail unless there is another application,
+     capable of reading the metadata, running.
+
+*-unversioned*::
+     Do not append a version component to the supplied 'metaname'. This option
+     may be used when the supplied 'metaname' already includes an explicit
+     version component at the end (which must be URI encoded). This option may
+     also be used for metadata content that is organized according to the
+     segmentation convention but does not use the versioning
+     convention at all. When this option is used, the FileOutputStream
+     abstraction will not be used, since that implies versioning.
+
+*-local*::
+     Specifies that a local repository be used to save the file.
+     This is the (new, as of release 0.5.0) default behavior.
+
+*-allownonlocal*::
+     Specifies that either a local or non-local repository be used to save the file.
+
+*-timeout* 'millis'::
+     Set the timeout that will be used for putting content objects on
+     during the stream reading. I.e., the time to wait for incoming interests.
+
+*-log* 'LEVEL'::
+     Set the logging level. 'LEVEL' must be the an acceptable Java
+     Logger level: either an integer or a level name (e.g. SEVERE).
+
+*-debug* 'portno'::
+	Allows attachment of an eclipse remote debugger to the utility at the specified port number.
+
+*-javaopts* 'options'::
+	Allows use of arbitrary java properties or options with the utility.
+
+EXIT STATUS
+-----------
+*0*::
+     Success
+
+*1*::
+     Failure (syntax or usage error; publishing error - no processes running that are prepared to ask or already asking for content)
+
+EXAMPLE
+-------
+The following example publishes a new version of the file "mydocument" and 
+adds the file "image.png" as thumbnail metadata for it
+
+    ndnputfile "ndn:/mydocument" "mydocument"
+    ndnputmeta "ndn:/mydocument" "_thumbnail_/image.png" "image.png"
+
+AUTHOR
+------
+Paul Rasmussen
+
+

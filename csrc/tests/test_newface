@@ -1,0 +1,67 @@
+# tests/test_newface
+# 
+# Part of the NDNx distribution.
+#
+# Portions Copyright (C) 2013 Regents of the University of California.
+# 
+# Based on the CCNx C Library by PARC.
+# Copyright (C) 2009 Palo Alto Research Center, Inc.
+#
+# This work is free software; you can redistribute it and/or modify it under
+# the terms of the GNU General Public License version 2 as published by the
+# Free Software Foundation.
+# This work is distributed in the hope that it will be useful, but WITHOUT ANY
+# WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
+# FOR A PARTICULAR PURPOSE.
+#
+AFTER : test_single_ndnd test_coders
+BEFORE : test_single_ndnd_teardown
+
+rm newface*.ndnb
+ndndsmoketest || SkipTest no ndnd
+
+# We need to learn the NDNDID of our ndnd.
+. test_ndndid
+
+# Create the body of a face creation request.
+ndn_xmltondnb -w - <<EOF >newface.ndnb
+<FaceInstance>
+  <Action>newface</Action>
+  <PublisherPublicKeyDigest ndnbencoding="hexBinary">$NDNDID</PublisherPublicKeyDigest>
+  <IPProto>17</IPProto>
+  <Host>10.211.55.8</Host>
+  <Port>9695</Port>
+  <FreshnessSeconds>3600</FreshnessSeconds>
+</FaceInstance>
+EOF
+
+cat newface.ndnb | ndnpoke -f -x 30 /_this_name_ignored_$$
+
+# Pull it out to use in the face creation request.  Base-64 encode it for the benefit of the shell.
+
+NFBLOB="`ndnpeek /_this_name_ignored_$$ | openssl enc -base64`"
+
+echo NFBLOB is $NFBLOB >&2
+
+# Now construct the interest.
+
+cat <<EOF >newface-request.xml
+<Interest>
+  <Name>
+    <Component ndnbencoding="text">ndnx</Component>
+    <Component ndnbencoding="hexBinary">$NDNDID</Component>
+    <Component ndnbencoding="text">newface</Component>
+    <Component ndnbencoding="base64Binary">$NFBLOB</Component>
+  </Name>
+  <Scope>1</Scope>
+</Interest>
+EOF
+ndn_xmltondnb -w newface-request.xml || Fail botch constructing newface-request.ndnb
+
+# Try out the face creation request
+ndndsmoketest -b send newface-request.ndnb recv > newface-response.ndnb
+
+ndn_ndnbtoxml newface-response.ndnb || Fail did not get newface response
+
+# Testing for the request to time out would be more complicated.
+rm newface-request.xml

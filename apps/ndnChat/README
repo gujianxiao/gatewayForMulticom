@@ -1,0 +1,58 @@
+Instructions for running ndnchat
+
+The ndnchat executable is in the bin subdirectory
+
+Arguments to ndnchat include a chat room name (or chat room channel) (for eg: ndn:/test_room or  ndn:/ndnx.org/test_room). The chat room name (or channel name) must be preceded by ndn:/
+
+You can run ndnChat in text mode by making the first commandline argument "-text".
+
+To run ndnchat, you first need to start ndnd (if it is not already running). 
+
+ndndstart
+ndnchat ndn:/test_room
+
+After following the above two steps, you should see a test_room chat window open up.  
+You can run multiple instances of ndnchat on the same machine and if you specify the same chat room name for each instance, you should be able to "chat" with all the multiple ndnchat instances on the same machine.
+
+If you would like to run any instance of ndnchat with a different "user name", you need to set the following environment variables.
+
+export NDNX_USER_NAME=your_new_username
+export NDNX_DIR=/var/tmp/your_new_username/.ndnx
+ndnchat ndn:/test_room
+
+Make sure to replace 'your_new_username' in the above export commands with the actual user name that you want to use for ndnchat.
+
+If on the other hand, you would like to run ndnchat across two different machines, your chat room name should be preceded by a routable prefix. For instance, naming your chat room as ndn:/ndnx.org/test_room allows users from the other machine to reach this chat room using the prefix ndn:/ndnx.org/ or ndn:/ndnx.org/test_room (depending on how you set up the routing).
+
+In this case, you need to add route table entries so that each machine knows how to forward the test_room packets appropriately. On each machine, you need to specify the other machine's name (where you want to send the test_room packets). 
+
+To run ndnchat in this two-player two-machine mode, on each machine run the following commands: 
+
+ndndstart
+ndndc add ndn:/ndnx.org udp other_machine_name
+ndnchat ndn:/ndnx.org/test_room
+
+Please ensure that 'other_machine_name' in the ndndc command above is replaced by the actual name (or ip address) of the second machine. For instance, if A and B are the names of the two machines participating in ndnchat, the ndndc command on  machine A needs to be:
+ndndc add ndn:/ndnx.org udp B
+
+Similarly, on machine B, the ndndc command needs to be:
+ndndc add ndn:/ndnx.org udp A 
+
+
+Similar to running ndnchat on two different machines, you can also run ndnchat across multiple machines. As in the previous case, your chat room name should be preceded by a routable prefix. 
+For instance, naming your chat room as ndn:/ndnx.org/test_room allows multiple users from multiple machines to reach this chat room using the prefix ndn:/ndnx.org/ or ndn:/ndnx.org/test_room (depending on how you set up the routing.)
+
+In this case, you need to add route table entries so that each machine knows how to forward those test_room packets.  Any one machine can be set up as the route_machine in this multi-machine version of ndnchat. Set up a topology with the chosen route_machine routing test_room packets to all the other machines and all the other machines routing test_room packets to the chosen route_machine.
+
+To run ndnchat in this multi-player multi-machine mode, on all the machines except for the machine chosen as the route_machine, run the following commands: 
+
+ndndstart
+ndndc add ndn:/ndnx.org udp route_machine_name
+ndnchat ndn:/ndnx.org/ndn_test_room
+
+Please replace 'route_machine_name' with the actual name or ip address of the chosen route machine. 
+One the machine chosen as the route_machine, first run 
+ndndstart
+Add entries using ndndc for all the remaining machines. Then run 
+ndnchatndn:/ndnx.org/ndn_test_room
+

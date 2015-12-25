@@ -1,0 +1,17 @@
+Makefile
+FAILING
+SKIPPED
+STATUS/
+testdata.txt
+testdriver
+ephemeral*
+*.out
+*face*.ndnb
+*reg*.ndnb
+extopt.ndnb
+heartbeat.ndnb
+scope0.ndnb
+unanswered.ndnb
+*-pre.html
+*-post.html
+*-status-*.html

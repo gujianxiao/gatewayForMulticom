@@ -1,0 +1,93 @@
+NDNGETMETA(1)
+=============
+
+NAME
+----
+ndngetmeta - retrieve metadata associated with specified NDNx content and save 
+it to a local file
+
+SYNOPSIS
+--------
+*ndngetmeta* [-javaopts '<options>'] [-debug '<portno>'] [-unversioned] [-timeout 'millis'] [-as 'pathToKeystore'] [-ac]  'ndnxname' 'metaname' 'filename'
+
+DESCRIPTION
+-----------
+The *ndngetmeta* utility retrieves metadata associated with content
+'ndnxname' and writes it to the local file 'filename'. The metadata
+must be published as a collection of NDNx Data in accordance with the
+naming conventions for segmented streams or files, optionally
+unversioned. For the default case of versioned content, *ndngetmeta*
+will retrieve the latest version of the metadata associated with the
+latest version of the referenced NDNx content.
+
+The 'ndnxname' must be specified using the NDNx URI encoding
+syntax. For simple cases of ASCII name components this is just
+pathname syntax with / delimiters.
+
+The 'metaname' must be the relative path of the metadata for the specified
+ndnxname, for example '_thumbnail_/image'.
+
+The 'filename' must be the pathname of a local file that will be
+written and will be overwritten if it already exists.
+
+The '-as' option sets the user key for decrypting published content.  This
+must point to a place in the filesystem where NDNx compatible keys have been
+saved.
+
+The '-ac' flag forces *ndngetmeta* to obey access control restrictions.  If
+the user is not permitted to read in a given namespace, decryption will fail.
+
+
+OPTIONS
+-------
+*-unversioned*::
+     Do not seek a version identifier as the next component following the
+     'metaname' prefix in retrieved Data. This option may be used when the
+     supplied 'metaname' already includes an explicit version
+     component at the end (which must be URI encoded). This option may
+     also be used for content that is organized according to the
+     segmentation convention but does not use the versioning
+     convention at all. When this option is used, the FileInputStream
+     abstraction will not be used, since that implies versioning.
+
+*-timeout* 'millis'::
+     Set the timeout that will be used for all content retrievals on
+     during the stream reading.
+
+*-log* 'LEVEL'::
+     Set the logging level. 'LEVEL' must be the an acceptable Java
+     Logger level: either an integer or a level name (e.g. SEVERE).
+
+*-as* 'pathToKeystore'::
+     Set the user for decrypting published content.  This must point to a place
+     in the filesystem where ndnx compatible keys have been saved.
+
+*-ac*::
+     This options forces *ndngetmeta* to obey access control restrictions.  If
+     the user is not permitted to read in a given namespace, decryption will
+     fail.
+
+*-debug* 'portno'::
+	Allows attachment of an eclipse remote debugger to the utility at the specified port number.
+
+*-javaopts* 'options'::
+	Allows use of arbitrary java properties or options with the utility.
+
+EXIT STATUS
+-----------
+*0*::
+     Success
+
+*1*::
+     Failure (syntax or usage error; retrieval error)
+
+EXAMPLE
+-------
+The following example retrieves the thumbnail metadata image.png associated 
+with the latest version of ndnx content "ndn:/mydocument" and places it into the file "checkimage.png"
+
+    ndngetmeta "ndn:/mydocument" "_thumbnail_/image.png" "checkimage.png"
+
+AUTHOR
+------
+Paul Rasmussen,

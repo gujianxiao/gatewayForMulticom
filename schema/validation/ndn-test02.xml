@@ -1,0 +1,10 @@
+<?xml version="1.0"?>
+<Interest>
+  <Name>
+    <Component ndnbencoding="base64Binary">dGVzdA==</Component>
+    <Component ndnbencoding="base64Binary">YnJpZ2dz</Component>
+    <Component ndnbencoding="base64Binary">dGVzdC50eHQ=</Component>
+    <Component ndnbencoding="base64Binary">AQIDBAUGBwgJCgsMDQ4PHxscHR4fLjxKXG1+Dw==</Component>
+  </Name>
+  <MinSuffixComponents>1</MinSuffixComponents>
+</Interest>

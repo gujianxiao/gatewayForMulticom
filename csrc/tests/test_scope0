@@ -1,0 +1,33 @@
+# tests/test_scope0
+# 
+# Part of the NDNx distribution.
+#
+# Portions Copyright (C) 2013 Regents of the University of California.
+# 
+# Based on the CCNx C Library by PARC.
+# Copyright (C) 2012 Palo Alto Research Center, Inc.
+#
+# This work is free software; you can redistribute it and/or modify it under
+# the terms of the GNU General Public License version 2 as published by the
+# Free Software Foundation.
+# This work is distributed in the hope that it will be useful, but WITHOUT ANY
+# WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
+# FOR A PARTICULAR PURPOSE.
+#
+AFTER : test_single_ndnd
+BEFORE : test_single_ndnd_teardown
+
+UNIQ=`GenSym test_scope0_`
+ndnsnew -0 /$UNIQ/one /$UNIQ/two > scope0.ndnb &
+SNEW=$!
+echo three | ndnpoke -p1 -V%00 /$UNIQ/three &
+echo two | ndnpoke -p1 -V%00 /$UNIQ/two &
+echo one | ndnpoke -p1 -V%00 /$UNIQ/one &
+ndndsmoketest timeo 500 recv # 1/2 second delay
+ndnpeek -c /$UNIQ/one | grep one || SkipTest test data not generated
+ndnpeek -c /$UNIQ/two | grep two || SkipTest test data not generated
+ndnpeek -c /$UNIQ/three | grep three || SkipTest test data not generated
+ndndsmoketest timeo 500 recv # 1/2 second delay
+kill $SNEW
+ITEMCOUNT=`ndnnamelist scope0.ndnb | wc -l`
+[ $ITEMCOUNT -eq 2 ] || Fail Expected 2 items in scope0.ndnb, got $ITEMCOUNT

@@ -1,0 +1,37 @@
+//EOF
+///bin/cat << //EOF >> ndnr_sendq.c
+
+//EOF
+///bin/cat << //EOF >> ndnr_store.c
+
+//EOF
+///bin/cat << //EOF >> ndnr_dispatch.c
+
+//EOF
+///bin/cat << //EOF >> ndnr_forwarding.c
+
+//EOF
+///bin/cat << //EOF >> ndnr_link.c
+
+//EOF
+///bin/cat << //EOF >> ndnr_match.c
+
+//EOF
+///bin/cat << //EOF >> ndnr_io.c
+
+//EOF
+///bin/cat << //EOF >> ndnr_net.c
+
+//EOF
+///bin/cat << //EOF >> ndnr_util.c
+
+//EOF
+///bin/cat << //EOF >> ndnr_init.c
+
+
+
+
+grep -A1 ^PUBLIC *.c | grep - | cut -d \( -f 1 | grep -v -e -- | sed -e 's/[.]c-/ /' -e s/^ndnr_// -e s/forwarding/fwd/ \
+| while read a b; do echo "s/$b/r_${a}_${b#ndnr_}/g"; done
+
+

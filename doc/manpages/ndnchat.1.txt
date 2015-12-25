@@ -1,0 +1,40 @@
+NDNCHAT(1)
+==========
+
+NAME
+----
+ndnchat - start (or join) a chatroom
+
+SYNOPSIS
+--------
+*ndnchat* 'chatroomname'
+
+DESCRIPTION
+-----------
+The *ndnchat* utility allows one to  join an existing chat channel (or create a new one if that particular channel does not exist) specified by the 'chatroomname'. The 'chatroomname'  must be preceded by ndn:/
+
+To run *ndnchat*, you first need to start ndnd using the *ndndstart(1)* command.
+
+
+ENVIRONMENT
+-----------
+
+Options for *ndnchat* are set via environment variables. 
+
+NDNX_USER_NAME=
+ friendlyname - You'll be known by this name in the chartroom.
+NDNX_DIR=
+/var/tmp/friendlyname/.ndnx - If you are running multiple instances of *ndnchat* on your machine, and you would like each instance to run under a different user (or friendly) name, then for each instance of *ndnchat*, you will have to set the CNN_USER_NAME and NDNX_DIR environment variables.
+
+
+EXIT STATUS
+-----------
+*0*::
+     Success
+
+*1*::
+     Failure (syntax or usage error; retrieval error)
+
+AUTHOR
+------
+Priya Mahadevan,

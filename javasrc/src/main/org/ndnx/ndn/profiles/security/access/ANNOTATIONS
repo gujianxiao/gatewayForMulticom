@@ -1,0 +1,4 @@
+/**
+ * @package org.ndnx.ndn.profiles.security.access
+ * Pluggable %access control framework.
+ */

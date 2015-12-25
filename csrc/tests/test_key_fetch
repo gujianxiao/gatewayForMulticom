@@ -1,0 +1,170 @@
+# tests/test_key_fetch
+# 
+# Test for fetch of key via KeyLocator
+#
+# Part of the NDNx distribution.
+#
+# Portions Copyright (C) 2013 Regents of the University of California.
+# 
+# Based on the CCNx C Library by PARC.
+# Copyright (C) 2009, 2011 Palo Alto Research Center, Inc.
+#
+# This work is free software; you can redistribute it and/or modify it under
+# the terms of the GNU General Public License version 2 as published by the
+# Free Software Foundation.
+# This work is distributed in the hope that it will be useful, but WITHOUT ANY
+# WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
+# FOR A PARTICULAR PURPOSE.
+#
+
+export NDN_LOCAL_PORT=$((NDN_LOCAL_PORT_BASE + 8))
+NDND_DEBUG=0 ndnd &
+trap "ndndsmoketest kill" 0
+
+# This test uses some preexisting ContentObjects; turen them into ndnb form.
+ndn_xmltondnb -w - << 'EOF' > keyfetchdata.ndnb
+<?xml version="1.0" encoding="UTF-8"?>
+<ContentObject>
+  <Signature>
+    <SignatureBits ndnbencoding="base64Binary">4HeGcQkknNER9zOt6/4PeTqT+mSw21QtuEFKbvOw6SXRiNzMCg5shJ
+wj0GlfjF+G8Ems1sxrwm1TTtolBBHf64cC/zORxp9dso2Q22VDCCh3iiUbllwez2kvTh6Ova7/nEmCvY2ZrGfz1VariXGWQNNQMgI
+8cvzOgwYw1DMzzKE=</SignatureBits>
+  </Signature>
+  <Name>
+    <Component ndnbencoding="text">ndnd</Component>
+    <Component ndnbencoding="text">test_keyfetch</Component>
+    <Component ndnbencoding="base64Binary">/QSghfBVTA==</Component>
+    <Component ndnbencoding="base64Binary">+A==</Component>
+  </Name>
+  <SignedInfo>
+    <PublisherPublicKeyDigest ndnbencoding="base64Binary">tVBrGro9p3YbD41hpKp+O20VtCb+tb2oI4msp2WjuBw=</PublisherPublicKeyDigest>
+    <Timestamp ndnbencoding="base64Binary">BSDsZgAA</Timestamp>
+    <FinalBlockID ndnbencoding="base64Binary">+A==</FinalBlockID>
+    <KeyLocator>
+      <KeyName>
+        <Name>
+          <Component ndnbencoding="text">named-data.net</Component>
+          <Component ndnbencoding="text">home</Component>
+          <Component ndnbencoding="text">default</Component>
+          <Component ndnbencoding="text">Key</Component>
+          <Component ndnbencoding="base64Binary">tVBrGro9p3YbD41hpKp+O20VtCb+tb2oI4msp2WjuBw=</Component>
+        </Name>
+        <PublisherPublicKeyDigest ndnbencoding="base64Binary">tVBrGro9p3YbD41hpKp+O20VtCb+tb2oI4msp2WjuBw=</PublisherPublicKeyDigest>
+      </KeyName>
+    </KeyLocator>
+  </SignedInfo>
+  <Content ndnbencoding="base64Binary">V2hlcmUgYXJlIG15IGtleXM/Cg==</Content>
+</ContentObject>
+EOF
+
+ndn_xmltondnb -w - << 'EOF' > keyfetchpkey.ndnb
+<?xml version="1.0" encoding="UTF-8"?>
+<ContentObject>
+  <Signature>
+    <SignatureBits ndnbencoding="base64Binary">YNqcsci9qnDgf9cT9VU/bS57In14ccsNjJXh8QuIo0bucHmAAJHhnGsuCrrR6
+QRpomgd/P4ZQoiKEF9e+xJK3ERQrWvTRHHMJZDIHi0/E4HTT8Gz4Dgaicu6kY4tGesWQYoLqHZpgl/GuOH+bH1mAC1mBUridpIQOk6OybWnr
+gk=</SignatureBits>
+  </Signature>
+  <Name>
+    <Component ndnbencoding="text">named-data.net</Component>
+    <Component ndnbencoding="text">home</Component>
+    <Component ndnbencoding="text">default</Component>
+    <Component ndnbencoding="text">Key</Component>
+    <Component ndnbencoding="base64Binary">tVBrGro9p3YbD41hpKp+O20VtCb+tb2oI4msp2WjuBw=</Component>
+  </Name>
+  <SignedInfo>
+    <PublisherPublicKeyDigest ndnbencoding="base64Binary">tVBrGro9p3YbD41hpKp+O20VtCb+tb2oI4msp2WjuBw=</PublisherPublicKeyDigest>
+    <Timestamp ndnbencoding="base64Binary">BSDsZgAA</Timestamp>
+    <Type ndnbencoding="text">(F?</Type>
+    <KeyLocator>
+      <KeyName>
+        <Name>
+          <Component ndnbencoding="text">named-data.net</Component>
+          <Component ndnbencoding="text">home</Component>
+          <Component ndnbencoding="text">default</Component>
+          <Component ndnbencoding="text">Key</Component>
+          <Component ndnbencoding="base64Binary">tVBrGro9p3YbD41hpKp+O20VtCb+tb2oI4msp2WjuBw=</Component>
+        </Name>
+        <PublisherPublicKeyDigest ndnbencoding="base64Binary">tVBrGro9p3YbD41hpKp+O20VtCb+tb2oI4msp2WjuBw=</PublisherPublicKeyDigest>
+      </KeyName>
+    </KeyLocator>
+  </SignedInfo>
+  <Content ndnbencoding="base64Binary">MIGfMA0GCSqGSIb3DQEBAQUAA4GNADCBiQKBgQDhfTCn2CirG4QLF1QtyvYgev0iHgh
+rKmDRbLf1REi6nz8IvNCZ2yHdFip3nmGqie7lVNOkfeIwvHrFkNUkBnw4mLum9dxDYLhF7aSMvZzxJqcjRF8OGVLXMlp1+vVWFE+amK9xh
+rAnhoW44sCL6ocXG03uWFwYKClbU5XrShd3nwIDAQAB</Content>
+</ContentObject>
+EOF
+
+ndn_xmltondnb -w - << 'EOF' > keyfetchsetup.ndnb
+<?xml version="1.0" encoding="UTF-8"?>
+<ContentObject>
+  <Signature>
+    <SignatureBits ndnbencoding="base64Binary">pz3Wj9XJvsvyHLug3TjfD/wgGdHHHg6qY7JOysBP6A9SuEm6QTIyd0JEsWNguWtR
+IhHAXA0B+MmPvwLcCCkp/KwDhlcCMkwy54K4KMT+7+IkLc3+5g1hFnXCVkdATxXQ
+YEk8kKEkTqY/V1Ev597qgWo5YhSBfQiyJJmrDpd/zcs=</SignatureBits>
+  </Signature>
+  <Name>
+    <Component ndnbencoding="text">check</Component>
+    <Component ndnbencoding="text">dataresponsetest</Component>
+    <Component ndnbencoding="base64Binary">/QTUcyxIww==</Component>
+    <Component ndnbencoding="base64Binary">AA==</Component>
+  </Name>
+  <SignedInfo>
+    <PublisherPublicKeyDigest ndnbencoding="base64Binary">gSNOydalY3g66mYS5MuRNBiAlKN5V9TYPJaxHPmAKl4=</PublisherPublicKeyDigest>
+    <Timestamp ndnbencoding="base64Binary">BNRzLEjU</Timestamp>
+    <FinalBlockID ndnbencoding="base64Binary">AA==</FinalBlockID>
+    <KeyLocator>
+      <Key ndnbencoding="base64Binary">MIGfMA0GCSqGSIb3DQEBAQUAA4GNADCBiQKBgQDK93umny6aOICdBPZ5/7+eDRqA
+ec4G9QeyiVO5Eo7nMSfB7y/cTXEfteEy5k7fXx4donctXwO6fi76PqfydJTMryOG
+buOgY8JzwyzJbTqDrruWohsIuO4iNcUvZOGf+T7u4kBcnmJi7Rl/j5S/sAqF8Re7
+lfwlkVRGHCSHlFxjeQIDAQAB</Key>
+    </KeyLocator>
+  </SignedInfo>
+  <Content ndnbencoding="base64Binary">SGVyZQo=</Content>
+</ContentObject>
+EOF
+
+ndndsmoketest
+dataresponsetest keyfetchdata.ndnb keyfetchpkey.ndnb keyfetchsetup.ndnb &
+ndndsmoketest -t 100 recv
+
+# Don't start the test until our dataresponsetest process is ready.
+ndnpeek -c /check/dataresponsetest || SkipTest dataresponsetest not responding
+
+# This is the heart of the test.
+# First, do a vanilla ndnls, which does not attempt to fetch the key.
+ndnls ndn:/ndnd/test_keyfetch > unverified.out
+# Next, tell ndnls that it should fetch the key.
+NDN_VERIFY=1 ndnls ndn:/ndnd/test_keyfetch > verified.out
+
+# Now make sure that we got what we were expecting.
+fgrep '[unverified]' unverified.out || Fail should have gotten unverified data without key
+fgrep '[verified]' verified.out || Fail should have gotten verified data with key
+
+rm keyfetchdata.ndnb keyfetchpkey.ndnb keyfetchsetup.ndnb unverified.out verified.out
+####################################################################################
+: <<'EOF'
+# Instructions for creating pre-signed data
+# This will need re-doing if/when schema or encoding changes.
+# Need java for this.  WARNING: mucks with ~/.ndnx
+# WARNING: these instructions may be outdated, apply NaCl
+
+NDND_DEBUG=7 ndnd &
+tools/ndn_repo stop
+killall java
+rm -rf /tmp/test_key_fetch_repo
+mkdir /tmp/test_key_fetch_repo
+rm -rf ~/test_key_fetch.ndnx
+test -d ~/x.ndnx || mv ~/.ndnx ~/x.ndnx
+tools/ndn_repo /tmp/test_key_fetch_repo
+echo "Where are my keys?" > /tmp/test_key_fetch.data
+ndnputfile ndn:/ndnd/test_keyfetch /tmp/test_key_fetch.data
+ndn_repo stop
+killall java
+mv ~/.ndnx ~/test_key_fetch.ndnx && mv ~/x.ndnx ~/.ndnx
+ndnpeek ndn:/ndnd/test_keyfetch > keyfetchdata.ndnb
+cat ~/test_key_fetch.ndnx/*/*.ndnb > keyfetchpkey.ndnb
+ndndumpnames
+ndndsmoketest kill
+
+END

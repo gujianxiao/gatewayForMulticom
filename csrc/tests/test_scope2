@@ -1,0 +1,49 @@
+# tests/test_scope2
+# 
+# Part of the NDNx distribution.
+#
+# Portions Copyright (C) 2013 Regents of the University of California.
+# 
+# Based on the CCNx C Library by PARC.
+# Copyright (C) 2010-2011 Palo Alto Research Center, Inc.
+#
+# This work is free software; you can redistribute it and/or modify it under
+# the terms of the GNU General Public License version 2 as published by the
+# Free Software Foundation.
+# This work is distributed in the hope that it will be useful, but WITHOUT ANY
+# WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
+# FOR A PARTICULAR PURPOSE.
+#
+AFTER : test_twohop_ndnd
+BEFORE : test_twohop_ndnd_teardown
+
+UNIQ=`GenSym test_scope2_`
+
+# Turn up logging in case something goes awry
+WithNDND 1 ndndlogging med
+WithNDND 2 ndndlogging med
+WithNDND 3 ndndlogging med
+
+WithNDND 3 ndnpoke -f /$UNIQ/scope2/stuff < /dev/null
+cat <<EOF >scope2interest.xml
+<Interest>
+  <Name>
+    <Component ndnbencoding="text">$UNIQ</Component>
+    <Component ndnbencoding="text">scope2</Component>
+  </Name>
+  <Scope>2</Scope>
+</Interest>
+EOF
+ndn_xmltondnb -w scope2interest.xml || Fail botch constructing scope2interest.ndnb
+
+WithNDND 2 ndndsmoketest -t 500 -b scope2interest.ndnb recv > scope2reply.ndnb
+cmp scope2reply.ndnb /dev/null || Fail interest was sent too far
+WithNDND 1 ndndsmoketest -t 500 -b scope2interest.ndnb recv > scope2reply.ndnb
+cmp scope2reply.ndnb /dev/null && Fail interest was not sent to neighbor
+WithNDND 0 ndndsmoketest -t 333 recv  # just a bit of delay
+WithNDND 2 ndndumpnames /$UNIQ/scope2/stuff > scope2stuff.out
+grep /$UNIQ/scope2/stuff scope2stuff.out || Fail original interest was not answered
+rm scope2interest.xml scope2interest.ndnb scope2reply.ndnb scope2stuff.out
+
+WithNDND 1 ndndlogging low
+WithNDND 2 ndndlogging low

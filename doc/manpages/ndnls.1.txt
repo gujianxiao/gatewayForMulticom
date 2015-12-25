@@ -1,0 +1,49 @@
+NDNLS(1)
+========
+
+NAME
+----
+ndnls - Attempts to list name components available at the next level of
+the hierarchy for a given NDNx name prefix. 
+
+SYNOPSIS
+--------
+*ndnls* 'ndnxname'
+
+DESCRIPTION
+-----------
+The *ndnls* utility lists name components available after the supplied NDNx
+name prefix, 'ndnxname', for content objects that are cached in the local *ndnd*.
+
+This utility does not have explicit flags or options, but can be modified via
+environment variables.  These include the scope of the generated interest
+('NDN_SCOPE'), the amount of time to wait between responses from *ndnd*
+('NDN_LINGER') and whether signature verification is desired ('NDN_VERIFY').
+
+
+OPTIONS
+-------
+The *ndnls* utility does not have additional flags or options.  Behavior can
+be changed by using the following two environment variables.
+
+    NDN_SCOPE=
+      Scope in generated interests (0, 1, 2). The default is none specified.
+      
+    NDN_LINGER=
+      Timeout for not receiving data.  The default is 0.5 seconds.
+      
+    NDN_VERIFY=
+      If set and non-empty, indicates that signature verification is required.
+
+
+EXIT STATUS
+-----------
+*0*::
+     Success
+
+*1*::
+     Failure (syntax or usage error; retrieval error)
+
+AUTHOR
+------
+Michael Plass

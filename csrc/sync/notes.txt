@@ -1,0 +1,40 @@
+
+# This simple test environment uses 3 shells.
+# Shell 0: for compilation
+# Shell 1: running the "old" version of Repo/Sync for 2 Repos
+# Shell 2: running the debugger for testing sync_trax
+
+# In Shell 0
+
+cd NDN/ndnx
+make
+
+# In Shell 1
+
+cd NDN/ndnx/csrc/sync_exp
+export PATH=.:../sync:../../bin:$PATH
+. ./setup
+Setup
+
+StartTest
+
+# In Shell 2
+
+cd NDN/ndnx/csrc/sync_exp
+export PATH=.:../sync:../../bin:$PATH
+export NDNS_DEBUG=INFO
+. settings
+. functions
+WithNDND 0 gdb ./sync_trax
+
+run -topo /ndn/sync -prefix /root/beer -secs 600 >gdb.txt
+
+# In Shell 1
+
+StoreFile 1 small
+StoreFile 2 small
+StoreFile 1 small; StoreFile 2 small
+StoreFile 1 big; StoreFile 2 big
+
+EndTest
+

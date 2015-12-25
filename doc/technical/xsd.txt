@@ -1,0 +1,11 @@
+NDNx Main Schema
+===============
+
+== NDNx XML schema
+
+This corresponds to the DTD link:dtd.html[ndnx.dtd].
+
+.ndnx.xsd
+------------------------------------
+include::../../schema/ndnx.xsd[]
+------------------------------------

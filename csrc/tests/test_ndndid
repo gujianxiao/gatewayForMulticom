@@ -1,0 +1,27 @@
+# tests/test_ndndid
+# 
+# Part of the NDNx distribution.
+#
+# Portions Copyright (C) 2013 Regents of the University of California.
+# 
+# Based on the CCNx C Library by PARC.
+# Copyright (C) 2009, 2010 Palo Alto Research Center, Inc.
+#
+# This work is free software; you can redistribute it and/or modify it under
+# the terms of the GNU General Public License version 2 as published by the
+# Free Software Foundation.
+# This work is distributed in the hope that it will be useful, but WITHOUT ANY
+# WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
+# FOR A PARTICULAR PURPOSE.
+#
+AFTER : test_single_ndnd
+BEFORE : test_single_ndnd_teardown
+
+# We need to learn the NDNDID of our ndnd.
+IsolatePubID () {
+	sed -n -e 's@^.*PublisherPublicKeyDigest ndnbencoding="hexBinary">@@' \
+               -e 's@</PublisherPublicKeyDigest.*$@@p'
+}
+ndnpeek ndn:/%C1.M.S.localhost/%C1.M.SRV/ndnd/KEY | ndn_ndnbtoxml -bx - | IsolatePubID > ndndid.out
+grep '^[0-9A-F][0-9A-F]*$' ndndid.out || Fail Could not get NDNDID
+NDNDID=`cat ndndid.out`

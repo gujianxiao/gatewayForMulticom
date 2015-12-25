@@ -1,0 +1,36 @@
+# tests/test_new_provider
+# 
+# Part of the NDNx distribution.
+#
+# Portions Copyright (C) 2013 Regents of the University of California.
+# 
+# Based on the CCNx C Library by PARC.
+# Copyright (C) 2010 Palo Alto Research Center, Inc.
+#
+# This work is free software; you can redistribute it and/or modify it under
+# the terms of the GNU General Public License version 2 as published by the
+# Free Software Foundation.
+# This work is distributed in the hope that it will be useful, but WITHOUT ANY
+# WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
+# FOR A PARTICULAR PURPOSE.
+#
+AFTER : test_single_ndnd
+BEFORE : test_single_ndnd_teardown
+
+date > testdata.txt
+: > testdata.out
+NAME=`GenSym`
+
+# Someone is interested ...
+NDN_LINGER=2 ndnpeek -c /test/test_new_provider/$NAME > testdata.out &
+
+# Wait a bit so that the interest will have been propagated to all old places.
+ndndsmoketest -t 133 recv recv
+# Provide the data in response to an interest.
+#  This wins only if ndnd forwards the interest to the new face, because
+#  the ndnpeek does not wait around long enough to reexpress.
+ndnpoke -v -x 30 -w 1 /test/test_new_provider/$NAME < testdata.txt
+# Make sure the ndnpeek has finished.
+wait %%
+diff testdata.txt testdata.out || Fail Interest was not sent to latecomer provider.
+rm testdata.txt testdata.out

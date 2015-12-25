@@ -1,0 +1,98 @@
+#!/bin/sh
+# tools/ndn_run
+# 
+# Part of the NDNx distribution.
+#
+# A utility script to start a NDNx java command line utility
+#
+# Portions Copyright (C) 2013 Regents of the University of California.
+# 
+# Based on the CCNx C Library by PARC.
+# Copyright (C) 2008-2012 Palo Alto Research Center, Inc.
+#
+# This work is free software; you can redistribute it and/or modify it under
+# the terms of the GNU General Public License version 2 as published by the
+# Free Software Foundation. 
+# This work is distributed in the hope that it will be useful, but WITHOUT ANY
+# WARRANTY; without even the implied warranty of MERCHANTABILITY or
+# FITNESS FOR A PARTICULAR PURPOSE. See the GNU General Public License
+# for more details. You should have received a copy of the GNU General Public
+# License along with this program; if not, write to the
+# Free Software Foundation, Inc., 51 Franklin Street, Fifth Floor,
+# Boston, MA 02110-1301, USA.
+
+usage() {
+  echo "usage: $0 [-debug <portno>] [ -javaopts <options> ] [ options for $0 ]"
+  exit 1
+}
+
+possible() {
+  echo Possible commands:
+  echo 
+  (cd $SCRIPT_DIR; grep -l -I ndn_run * 2>/dev/null) | grep -v ndn_run | sort -u
+  exit 1
+}
+
+JAR_FILE=ndn.jar
+JAVA_HOME=${JAVA_HOME:=/usr}
+JAVA=$JAVA_HOME/bin/java
+SCRIPT_DIR=`dirname $0`  # note this is relative path
+CMD_NAME=`basename $0` 
+NDN_HOME_JAVA=${NDN_HOME_JAVA:-$SCRIPT_DIR}
+if [ ! -f "$NDN_HOME_JAVA/$JAR_FILE" ]
+then
+    if [ -f "$SCRIPT_DIR/../lib/$JAR_FILE" -o -f "$SCRIPT_DIR/../$JAR_FILE" ] 
+    then
+	NDN_HOME_JAVA="$SCRIPT_DIR/.."
+    else
+	echo "Cannot find $JAR_FILE, set NDN_HOME_JAVA env variable."
+	exit 1;
+    fi
+fi
+
+CP1=$NDN_HOME_JAVA/*.jar
+CP2=$NDN_HOME_JAVA/lib/*.jar
+
+CP1=`echo $CP1 | sed "s/ /:/g"`
+CP2=`echo $CP2 | sed "s/ /:/g"`
+
+CLASSPATH=$CP1:$CP2
+PORTARG=
+
+if [ ! "$NDN_LOCAL_PORT" = "" ]; then
+  PORTARG="-Dndn.agent.port=$NDN_LOCAL_PORT"
+fi
+
+DEBUG_OPTION=
+JAVA_OPTIONS=
+while [ $# -gt 0 ]; do
+    if [ "$1" = "-debug" ]; then
+      if [ $# -lt 2 ]; then
+        usage
+      fi
+      DEBUG_OPTION="-Xrunjdwp:transport=dt_socket,address=$2,server=y,suspend=y"
+      shift 2
+    elif [ "$1" = "-javaopts" ]; then
+      if [ $# -lt 2 ]; then
+        usage
+      fi
+      JAVA_OPTIONS=$2
+      shift 2
+    else
+      break
+    fi
+done
+
+if [ $CMD_NAME != "ndn_run" ]; then
+    UTIL=$CMD_NAME
+elif [ $# = 0 ]; then
+  possible
+else
+  UTIL=$1
+  shift
+fi
+
+$JAVA -cp $CLASSPATH $PORTARG $DEBUG_OPTION $JAVA_OPTIONS org.ndnx.ndn.utils.$UTIL "[-debug <portno>] [-javaopts <options>] " $*
+
+
+

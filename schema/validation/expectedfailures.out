@@ -1,0 +1,85 @@
+./shouldfail xmllint --noout --schema ndnx.xsd ndn-bad01.xml
+ndn-bad01.xml:1: parser error : Start tag expected, '<' not found
+This is not XML.
+^
+./shouldfail xmllint --noout --schema ndnx.xsd ndn-bad03.xml
+ndn-bad03.xml:1: element a: Schemas validity error : Element 'a': No matching global declaration available for the validation root.
+ndn-bad03.xml fails to validate
+./shouldfail xmllint --noout --schema ndnx.xsd ndn-bad06.xml
+ndn-bad06.xml:6: element SpublisherIssuerKeyDigest: Schemas validity error : Element 'SpublisherIssuerKeyDigest': This element is not expected. Expected is one of ( PublisherPublicKeyDigest, PublisherCertificateDigest, PublisherIssuerKeyDigest, PublisherIssuerCertificateDigest, Exclude, ChildSelector, AnswerOriginKind, Scope, InterestLifetime, Nonce ).
+ndn-bad06.xml fails to validate
+./shouldfail xmllint --noout --schema ndnx.xsd ndn-bad09.xml
+ndn-bad09.xml:15: element FinalBlockID: Schemas validity error : Element 'FinalBlockID': This element is not expected. Expected is ( Timestamp ).
+ndn-bad09.xml fails to validate
+./shouldfail xmllint --noout --schema ndnx.xsd ndn-bad11.xml
+ndn-bad11.xml:5: element Bloom: Schemas validity error : Element 'Bloom': This element is not expected. Expected is ( Component ).
+ndn-bad11.xml fails to validate
+./shouldfail xmllint --noout --schema ndnx.xsd ndn-schemabad01.xml
+ndn-schemabad01.xml:5: element Witness: Schemas validity error : Element 'Witness': 'foo' is not a valid value of the atomic type 'xs:base64Binary'.
+ndn-schemabad01.xml fails to validate
+./shouldfail xmllint --noout --schema ndnx.xsd ndn-schemabad02.xml
+ndn-schemabad02.xml:5: element Witness: Schemas validity error : Element 'Witness': 'bad!' is not a valid value of the atomic type 'xs:base64Binary'.
+ndn-schemabad02.xml fails to validate
+./shouldfail xmllint --noout --schema ndnx.xsd ndn-schemabad04.xml
+ndn-schemabad04.xml:12: element Scope: Schemas validity error : Element 'Scope': 'E' is not a valid value of the atomic type 'xs:nonNegativeInteger'.
+ndn-schemabad04.xml fails to validate
+./shouldfail xmllint --noout --schema ndnx.xsd ndn-schemabad10.xml
+ndn-schemabad10.xml:12: element Timestamp: Schemas validity error : Element 'Timestamp': [facet 'length'] The value has a length of '9'; this differs from the allowed length of '6'.
+ndn-schemabad10.xml:12: element Timestamp: Schemas validity error : Element 'Timestamp': '+B+A+D+T67bp' is not a valid value of the atomic type 'BinaryTime12'.
+ndn-schemabad10.xml fails to validate
+./shouldfail xmllint --noout --schema ndnx.xsd ndn-schemabad12.xml
+ndn-schemabad12.xml:13: element Type: Schemas validity error : Element 'Type': [facet 'enumeration'] The value 'FUZZ' is not an element of the set {'DATA', 'ENCR', 'GONE', 'KEY/', 'LINK', 'NACK'}.
+ndn-schemabad12.xml:13: element Type: Schemas validity error : Element 'Type': 'FUZZ' is not a valid value of the atomic type 'ContentTypeType'.
+ndn-schemabad12.xml:27: element Type: Schemas validity error : Element 'Type': [facet 'enumeration'] The value 'FUZZ' is not an element of the set {'DATA', 'ENCR', 'GONE', 'KEY/', 'LINK', 'NACK'}.
+ndn-schemabad12.xml:27: element Type: Schemas validity error : Element 'Type': 'FUZZ' is not a valid value of the atomic type 'ContentTypeType'.
+ndn-schemabad12.xml fails to validate
+./shouldfail xmllint --noout --schema ndnx.xsd ndn-schemabad17.xml
+ndn-schemabad17.xml:7: element Entry: Schemas validity error : Element 'Entry': Missing child element(s). Expected is one of ( IntegerValue, DecimalValue, StringValue, BinaryValue, NameValue ).
+ndn-schemabad17.xml:15: element BinaryValue: Schemas validity error : Element 'BinaryValue': This element is not expected. Expected is ( Key ).
+ndn-schemabad17.xml fails to validate
+./shouldfail xmllint --noout --schema security.xsd security-bad01.xml
+security-bad01.xml:2: element WrappedKey: Schemas validity error : Element 'WrappedKey': Missing child element(s). Expected is one of ( WrappingKeyName, WrapAlgorithm, KeyAlgorithm, Label, EncryptedNonceKey, EncryptedKey ).
+security-bad01.xml fails to validate
+./shouldfail xmllint --noout --schema security.xsd security-schemabad01.xml
+security-schemabad01.xml:8: element EncryptedKey: Schemas validity error : Element 'EncryptedKey': 'bad!' is not a valid value of the atomic type 'xs:base64Binary'.
+security-schemabad01.xml fails to validate
+./shouldfail xmllint --noout --schema repository.xsd repository-schemabad01.xml
+repository-schemabad01.xml:4: element Type: Schemas validity error : Element 'Type': 'bad!' is not a valid value of the atomic type 'RepositoryInfoDataTypeType'.
+repository-schemabad01.xml fails to validate
+./shouldfail xmllint --noout --schema repository.xsd security-bad01.xml
+security-bad01.xml:2: element WrappedKey: Schemas validity error : Element 'WrappedKey': No matching global declaration available for the validation root.
+security-bad01.xml fails to validate
+./shouldfail xmllint --noout --schema sync.xsd sync-bad00.xml
+sync-bad00.xml:2: element SyncConfigSlice: Schemas validity error : Element 'SyncConfigSlice': Missing child element(s). Expected is ( SyncConfigSliceList ).
+sync-bad00.xml fails to validate
+./shouldfail xmllint --noout --schema sync.xsd sync-schemabad25.xml
+sync-schemabad25.xml:21: element Component: Schemas validity error : Element 'Component': 'TS@ztEvAt4WXolTH146cJKsrdnXdvaNvkkz/lsmKucM=' is not a valid value of the atomic type 'xs:base64Binary'.
+sync-schemabad25.xml fails to validate
+./shouldfail xmllint --noout --dtdvalid ndnx.dtd ndn-bad01.xml
+ndn-bad01.xml:1: parser error : Start tag expected, '<' not found
+This is not XML.
+^
+./shouldfail xmllint --noout --dtdvalid ndnx.dtd ndn-bad03.xml
+ndn-bad03.xml:1: element a: validity error : No declaration for element a
+Document ndn-bad03.xml does not validate against ndnx.dtd
+./shouldfail xmllint --noout --dtdvalid ndnx.dtd ndn-bad06.xml
+ndn-bad06.xml:2: element Interest: validity error : Element Interest content does not follow the DTD, expecting (Name , MinSuffixComponents? , MaxSuffixComponents? , (PublisherPublicKeyDigest | PublisherCertificateDigest | PublisherIssuerKeyDigest | PublisherIssuerCertificateDigest)? , Exclude? , ChildSelector? , AnswerOriginKind? , Scope? , InterestLifetime? , Nonce?), got (Name MinSuffixComponents MaxSuffixComponents SpublisherIssuerKeyDigest ChildSelector AnswerOriginKind Scope )
+ndn-bad06.xml:6: element SpublisherIssuerKeyDigest: validity error : No declaration for element SpublisherIssuerKeyDigest
+ndn-bad06.xml:6: element SpublisherIssuerKeyDigest: validity error : No declaration for attribute ndnbencoding of element SpublisherIssuerKeyDigest
+Document ndn-bad06.xml does not validate against ndnx.dtd
+./shouldfail xmllint --noout --dtdvalid ndnx.dtd ndn-bad09.xml
+ndn-bad09.xml:12: element SignedInfo: validity error : Element SignedInfo content does not follow the DTD, expecting (PublisherPublicKeyDigest , Timestamp , Type? , FreshnessSeconds? , FinalBlockID? , KeyLocator? , ExtOpt?), got (PublisherPublicKeyDigest FinalBlockID KeyLocator )
+Document ndn-bad09.xml does not validate against ndnx.dtd
+./shouldfail xmllint --noout --dtdvalid ndnx.dtd ndn-bad11.xml
+ndn-bad11.xml:4: element Exclude: validity error : Element Exclude content does not follow the DTD, expecting ((Any | Bloom)? , (Component , (Any | Bloom)?)*), got (Bloom Bloom Component Any Component )
+Document ndn-bad11.xml does not validate against ndnx.dtd
+./shouldfail xmllint --noout --dtdvalid security.dtd security-bad01.xml
+security-bad01.xml:2: element WrappedKey: validity error : Element WrappedKey content does not follow the DTD, expecting (WrappingKeyIdentifier? , WrappingKeyName? , WrapAlgorithm? , KeyAlgorithm? , Label? , EncryptedNonceKey? , EncryptedKey), got (WrappingKeyIdentifier )
+Document security-bad01.xml does not validate against security.dtd
+./shouldfail xmllint --noout --dtdvalid repository.dtd repository-bad01.xml
+repository-bad01.xml:2: element RepositoryInfo: validity error : Element RepositoryInfo content does not follow the DTD, expecting (Version , Type , RepositoryVersion , GlobalPrefixName , LocalName , Name* , InfoString?), got (Version Type RepositoryVersion GlobalProofixName LocalName )
+repository-bad01.xml:6: element GlobalProofixName: validity error : No declaration for element GlobalProofixName
+Document repository-bad01.xml does not validate against repository.dtd
+./shouldfail xmllint --noout --dtdvalid sync.dtd sync-bad00.xml
+sync-bad00.xml:2: element SyncConfigSlice: validity error : Element SyncConfigSlice content does not follow the DTD, expecting (SyncVersion , Name , Name , SyncConfigSliceList), got (SyncVersion Name Name )
+Document sync-bad00.xml does not validate against sync.dtd

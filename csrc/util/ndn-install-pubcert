@@ -1,0 +1,104 @@
+#!/usr/bin/env bash
+
+D=`dirname "$0"`
+NDN_NDNBTOXML=ndn_ndnbtoxml
+
+OPENSSL=openssl
+HEXDUMP=hexdump
+if [ `uname` == "Linux" ]; then
+    BASE64="base64 -i"
+else
+    BASE64="base64"
+fi
+SED=sed
+XXD=xxd
+
+
+function usage {
+  if [ "x$1" != "x" ]; then
+    echo -e $1 >&2
+  fi
+  cat <<EOF
+Usage:
+    $0 [-h] [-f] [-v] <pubcert-file>
+
+        The script performs the following operations:
+          - reads <pubcert-file>
+          - checks if pubcert file corresponds to .ndnx_keystore
+          - installs pubcert file to .ndnx_keystore.pubcert (will not overwrite unless -f is specified)
+
+		If -v is specified, then the output will be more verbose.
+EOF
+
+  exit 1
+}
+
+FORCE=0
+VERBOSE=0
+
+while getopts "hvf" flag; do
+    case "$flag" in
+        f)
+            FORCE=1
+            ;;
+        v)
+            VERBOSE=1
+            ;;
+        h | ?)
+            usage
+            ;;
+    esac
+done
+
+PUBCERT_FILE=${@:$OPTIND:1}
+
+if [ "x$PUBCERT_FILE" == "x" ]; then
+    usage "\E[91mERROR: Incorrect parameter usage\E[0m"
+fi
+
+if [ ! -f "$PUBCERT_FILE" ]; then
+    echo -e "\E[91mERROR: Specified pubcert file [$PUBCERT_FILE] does not exist\E[0m" >&2
+    exit 1
+fi
+
+export KEY_PASSWORD=${NDNX_KEYSTORE_PASSWORD:-"Th1s1sn0t8g00dp8ssw0rd."}
+export NDNX_DIR=${NDNX_DIR:-$HOME/.ndnx}
+
+pubcert_base64=`${NDN_NDNBTOXML} -b "$PUBCERT_FILE" 2>/dev/null | grep ContentObject | head -1 | ${SED} 's|^.*<Content ndnbencoding="base64Binary">\(.*\)</Content>.*$|\1|g'`
+
+keystore_base64=`$OPENSSL pkcs12 -in "$NDNX_DIR/.ndnx_keystore" -password env:KEY_PASSWORD -clcerts -nokeys -nomacver | $OPENSSL x509 -pubkey -noout | $OPENSSL rsa -pubin -pubout -inform PEM -outform DER 2> /dev/null | $BASE64 | tr -d '\n\r\f'`
+
+if [ "x$pubcert_base64" != "x$keystore_base64" ]; then
+    if [ "x$VERBOSE" = "x1" ]; then
+        echo "PUBCERT: $pubcert_base64"
+        echo "KEYSTORE: $keystore_base64"
+    fi
+    echo -e "\E[91mERROR: Invalid pubcert file [$PUBCERT_FILE] or it does not match key in [$NDNX_DIR/.ndnx_keystore]\E[0m"
+    exit 1
+fi
+
+DST=$NDNX_DIR/.ndnx_keystore.pubcert
+
+if [ "x$DST" == "x$PUBCERT_FILE" ]; then
+    echo -e "\E[91mERROR: Specified pubcert file is already installed\E[0m"
+    exit 1
+fi
+
+if [ -f "$DST" -a $FORCE -eq 0 ]; then
+    echo -e "\E[91mERROR: [$DST] already exists. Please specify -f if you want to overwrite existing file\E[0m"
+    exit 1
+fi
+
+echo -e "Installing: \E[92m[$PUBCERT_FILE]\E[0m -> \E[94m[$DST]\E[0m"
+cp "$PUBCERT_FILE" "$DST"
+
+name=`ndn-pubkey-name`
+RETCODE=$?
+
+if [ $RETCODE -ne 0 ]; then
+    echo -e "\E[91mFAIL: check if pubcert is correct and try again\E[0m"
+    exit 1
+fi
+
+echo -e "Public key name: \E[92m$name\E[0m"
+exit 0

@@ -1,0 +1,125 @@
+'\" t
+.\"     Title: ndndsmoketest
+.\"    Author: [FIXME: author] [see http://docbook.sf.net/el/author]
+.\" Generator: DocBook XSL Stylesheets v1.76.0 <http://docbook.sf.net/>
+.\"      Date: 05/16/2013
+.\"    Manual: \ \&
+.\"    Source: \ \& 0.7.2
+.\"  Language: English
+.\"
+.TH "NDNDSMOKETEST" "1" "05/16/2013" "\ \& 0\&.7\&.2" "\ \&"
+.\" -----------------------------------------------------------------
+.\" * Define some portability stuff
+.\" -----------------------------------------------------------------
+.\" ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+.\" http://bugs.debian.org/507673
+.\" http://lists.gnu.org/archive/html/groff/2009-02/msg00013.html
+.\" ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+.ie \n(.g .ds Aq \(aq
+.el       .ds Aq '
+.\" -----------------------------------------------------------------
+.\" * set default formatting
+.\" -----------------------------------------------------------------
+.\" disable hyphenation
+.nh
+.\" disable justification (adjust text to left margin only)
+.ad l
+.\" -----------------------------------------------------------------
+.\" * MAIN CONTENT STARTS HERE *
+.\" -----------------------------------------------------------------
+.SH "NAME"
+ndndsmoketest \- Simple program for smoke\-test of ndnd\&.
+.SH "SYNOPSIS"
+.sp
+\fBndndsmoketest\fR [\-b] [\-t \fImsec\fR] [ (\-T | \-u) \fIhostname\fR ] ( send \fIfilename\fR | \fIsendfilename\fR\&.ndnb | recv | kill | status [\-x] | timeo \fImsec\fR ) \fI\&...\fR
+.SH "DESCRIPTION"
+.sp
+The \fBndndsmoketest\fR is a simple program for sending and receiving data on sockets, for the purpose of testing ndnd\&.
+.sp
+Most of what this program does could be done with \fBnc\fR(1) (aka netcat)\&. It intentionally understands almost nothing about NDNx protocols\&.
+.SH "OPTIONS"
+.PP
+\fB\-b\fR
+.RS 4
+Binary output on stdout instead of the default hex\&.
+.RE
+.PP
+\fB\-t\fR \fImilliseconds\fR
+.RS 4
+Set the timeout for recv commands (default is 1000, or 1 second)\&.
+.RE
+.PP
+\fB\-T\fR \fIhostname\fR
+.RS 4
+Contact the ndnd on the named host via TCP instead of the default unix\-domain socket\&.
+.RE
+.PP
+\fB\-u\fR \fIhostname\fR
+.RS 4
+Contact the ndnd on the named host via UDP instead of the default unix\-domain socket\&.
+.RE
+.PP
+\fB\-x\fR
+.RS 4
+Use in conjunction with status command, returns XML output on stdout
+.RE
+.SH "ARGUMENTS"
+.sp
+The remaining arguments are processed in order\&.
+.PP
+\fBsend\fR \fIfilename\fR
+.RS 4
+Send the contents of the named file\&. Use
+\fI\-\fR
+to read from stdin\&.
+.RE
+.PP
+\fBsendfilename\fR\&.ndnb
+.RS 4
+If the file extension is
+\fB\&.ndnb\fR, the
+\fBsend\fR
+verb may be omitted\&.
+.RE
+.PP
+\fBrecv\fR
+.RS 4
+Recv one chunk (packet) and write the result to stdout (hex by default, but see \-b)\&. Times out with a message to stderr if nothing is received\&.
+.RE
+.PP
+\fBkill\fR
+.RS 4
+Shuts down ndnd cleanly\&.
+.RE
+.PP
+\fBstatus\fR
+.RS 4
+Used to implement
+\fBndndstatus\fR(1)\&. Pass optional [\-x] argument to request XML output\&. See
+NDND Status XML documentation
+for more details\&.
+.RE
+.PP
+\fBtimeo\fR \fImilliseconds\fR
+.RS 4
+Set the timeout for subsequent recv commands\&.
+.RE
+.SH "OUTPUT"
+.sp
+Hex by default, but binary output may be requested with \-b\&.
+.SH "EXIT STATUS"
+.PP
+\fB0\fR
+.RS 4
+Success
+.RE
+.PP
+\fBnonzero\fR
+.RS 4
+Failure (syntax or usage error, file not found)
+.RE
+.SH "SEE ALSO"
+.sp
+\fBndndstop\fR(1), \fBndndstatus\fR(1)
+.sp
+Michael Plass

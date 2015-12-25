@@ -1,0 +1,46 @@
+# tests/test_extopt
+# 
+# Part of the NDNx distribution.
+#
+# Portions Copyright (C) 2013 Regents of the University of California.
+# 
+# Based on the CCNx C Library by PARC.
+# Copyright (C) 2012 Palo Alto Research Center, Inc.
+#
+# This work is free software; you can redistribute it and/or modify it under
+# the terms of the GNU General Public License version 2 as published by the
+# Free Software Foundation.
+# This work is distributed in the hope that it will be useful, but WITHOUT ANY
+# WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
+# FOR A PARTICULAR PURPOSE.
+#
+AFTER : test_single_ndnd
+BEFORE : test_single_ndnd_teardown
+
+# The first portion of the ExtOpt is supposed to be a sequence of ndnb-encoded elements.
+# Generate two of them.
+ndn_xmltondnb -w << EOF > extopt.ndnb
+<testdata>
+This is test data for extopt.
+The ndnb encoding may be used without dtags - this is an example.
+</testdata>
+EOF
+ndn_xmltondnb -w << EOF >> extopt.ndnb
+<Name>
+  <Component ndnbencoding="text">Sample one-component Name</Component>
+</Name>
+EOF
+
+# Additional stuff may follow, after a null byte.
+dd if=/dev/zero bs=1 count=1 >> extopt.ndnb
+dd if=/dev/urandom bs=10 count=10 >> extopt.ndnb
+
+# Make a content object, and pass it through ndnd.
+echo 123 | ndnpoke -e extopt.ndnb -V%00 -x5 /test/extopt &
+POKEPID=$!
+
+ndnpeek -v /test/extopt > extopt-co.out || Fail could not transfer extopt
+
+ndncat /test/extopt | grep 123 || Fail wrong content
+
+ndnbx -v -d extopt-co.out ExtOpt | cmp - extopt.ndnb || Fail extopt not tranported properly

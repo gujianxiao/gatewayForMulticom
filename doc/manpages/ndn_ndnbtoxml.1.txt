@@ -1,0 +1,67 @@
+NDN_NDNBTOXML(1)
+================
+
+NAME
+----
+ndn_ndnbtoxml - convert ndn binary encoded data into XML form
+
+SYNOPSIS
+--------
+*ndn_ndnbtoxml* [-bvx] [-d 'dict'] [-s 'pat'] 'file' '...'
+
+DESCRIPTION
+-----------
+The *ndn_ndnbtoxml* converts ndn binary encoded data into XML form.
+
+OPTIONS
+-------
+*-b*::
+	Force base64Binary (or hexBinary if used with -x) instead of preferring text where possible.
+
+*-d* 'dict'::
+	Augment the built-in DTAG dictionary with the named file (format like tagname.csvdict).
+	May be repeated.
+
+*-v*::
+	Verbose - add comments with alternative encodings.
+
+*-x*::
+	Prefer hexBinary over the default of base64Binary.
+
+*-s* 'pat'::
+	Split concatenated ndnb blocks into separate output files, using 'pat' to generate output files named 'pat00000.xml', 'pat00001.xml', ...
+
+ARGUMENTS
+---------
+The named files should contain ndnb-encoded data.
+Use *-* to specify standard input.
+
+OUTPUT
+------
+The XML form appears on standard output, unless the *-s* switch is used; status and diagnostic messages appear on standard error.
+
+The output is produced in a compact form.
+For more human-readable, it is often useful to pipe the output through *xmllint --format -*.
+
+By default, BLOB fields are turned into base64Binary if they are not expressible in a safe subset of ascii printable characters.
+If hexBinary is preferred, use the *-x* switch.
+In any case, a ndnbencoding attribute is added to the enclosing element to indicate which display encoding is being used for the BLOB.
+
+If you want to check the XML to make sure it conforms to a schema, use the *-b* switch to force base64Binary (because the schemas current assume that).
+
+The output may be converted back into ndnb form using the *ndn_xmltondnb* utility.
+
+EXIT STATUS
+-----------
+*0*::
+     Success
+
+*nonzero*::
+     Failure (syntax or usage error, file not found)
+
+SEE ALSO
+--------
+*ndn_xmltondnb*(1)
+
+Michael Plass
+

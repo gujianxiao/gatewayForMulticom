@@ -1,0 +1,422 @@
+'\" t
+.\"     Title: ndnd-autoconfig
+.\"    Author: [see the "AUTHOR" section]
+.\" Generator: DocBook XSL Stylesheets v1.76.1 <http://docbook.sf.net/>
+.\"      Date: 03/11/2013
+.\"    Manual: \ \&
+.\"    Source: \ \& 0.7.1
+.\"  Language: English
+.\"
+.TH "NDND\-AUTOCONFIG" "1" "03/11/2013" "\ \& 0\&.7\&.1" "\ \&"
+.\" -----------------------------------------------------------------
+.\" * Define some portability stuff
+.\" -----------------------------------------------------------------
+.\" ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+.\" http://bugs.debian.org/507673
+.\" http://lists.gnu.org/archive/html/groff/2009-02/msg00013.html
+.\" ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+.ie \n(.g .ds Aq \(aq
+.el       .ds Aq '
+.\" -----------------------------------------------------------------
+.\" * set default formatting
+.\" -----------------------------------------------------------------
+.\" disable hyphenation
+.nh
+.\" disable justification (adjust text to left margin only)
+.ad l
+.\" -----------------------------------------------------------------
+.\" * MAIN CONTENT STARTS HERE *
+.\" -----------------------------------------------------------------
+.SH "NAME"
+ndnd-autoconfig \- Command/daemon for automatic default router configuration for ndnd\&.
+.SH "SYNOPSIS"
+.sp
+\fBndnd\-autoconfig\fR [\-d]
+.SH "DESCRIPTION"
+.sp
+The \fBndnd\-autoconfig\fR command can be used to automatically configure default route for ndnd\&. The command can be run as daemon (with \-d option) or once\&.
+.SH "OPTIONS"
+.PP
+\fB\-d\fR
+.RS 4
+Runs in daemon mode\&. If not specified, the command will attempt to auto\-configure default route only once\&.
+.RE
+.SS "Auto\-config process (3 stages)"
+.sp
+Stages 1 and 2 already exist in the current \fBndnd\-autoconfig\fR script\&.
+.sp
+.RS 4
+.ie n \{\
+\h'-04' 1.\h'+01'\c
+.\}
+.el \{\
+.sp -1
+.IP "  1." 4.2
+.\}
+Add multicast face, issue interest for /local/ndn/udp, and get the latest version of the data using appropriate exclude filters (using "ndnpeek \-v /local/ndn/udp")
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}
+if data returned, configure face to the hub and finish auto\-config
+.RE
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}
+auto\-configured face is remembered using creating a "fake" route to /autoconf prefix
+.RE
+.RE
+.sp
+.RS 4
+.ie n \{\
+\h'-04' 2.\h'+01'\c
+.\}
+.el \{\
+.sp -1
+.IP "  2." 4.2
+.\}
+If previous step failed, issue the following DNS query using dig command "dig +search +short +cmd +tries=2 +ndots=10 _ndnx\&._udp srv"
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}
+if valid data returned, get the first returned data, configure face, and finish auto\-config
+.RE
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}
+auto\-configured face is remembered using creating a "fake" route to /autoconf prefix
+.RE
+.RE
+.sp
+.RS 4
+.ie n \{\
+\h'-04' 3.\h'+01'\c
+.\}
+.el \{\
+.sp -1
+.IP "  3." 4.2
+.\}
+If previous steps failed:
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}
+Obtain name of the users public key from ~/\&.ndnx/\&.ndnx_keystore\&.pubcert file using
+\fBndn\-pubkey\-name\fR
+command\-line tool
+.RE
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}
+"DNSify" name, removing first two and last three components using
+\fBndn\-name\-dnsifier\&.py\fR
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}
+/ndn/keys/<site>/<user>/<key\-hash>/<version>/<segment> is converted to <site>/<user>
+.RE
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}
+reverse order of components: <user>/<site>
+.RE
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}
+replace "/" with "\&.": <user>\&.<site>, for example:
+.sp
+.if n \{\
+.RS 4
+.\}
+.nf
+/ndn/keys/ucla\&.edu/alex/<key\-hash> \-> alex\&.ucla\&.edu
+.fi
+.if n \{\
+.RE
+.\}
+.RE
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}
+stop further processing if the resulting name does not conform DNS standard (I already wrote a procedure to attempt to convert to international domain name, if it is possible)
+.RE
+.RE
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}
+Append _homehub\&._autoconf\&.named\-data\&.net\&. postfix to the dnsified name
+.sp
+.if n \{\
+.RS 4
+.\}
+.nf
+alex\&.ucla\&.edu\&._homehub\&._autoconf\&.named\-data\&.net\&.
+.fi
+.if n \{\
+.RE
+.\}
+.RE
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}
+Issue a SRV dns query with _ndnx\&._udp prefix (not really necessary, but should do it for clarity)
+.sp
+.if n \{\
+.RS 4
+.\}
+.nf
+"dig +short +cmd _ndnx\&._udp\&.alex\&.ucla\&.edu\&._homehub\&._autoconf\&.named\-data\&.net\&. srv"
+.fi
+.if n \{\
+.RE
+.\}
+.RE
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}
+In case of a positive answer, set up face and remember it using /autoconf prefix
+.RE
+.RE
+.SS "Prerequisites for 3rd stage of autoconfiguration"
+.sp
+.RS 4
+.ie n \{\
+\h'-04' 1.\h'+01'\c
+.\}
+.el \{\
+.sp -1
+.IP "  1." 4.2
+.\}
+Extract public key (\&.pem file) from automatically (or newly) generated keystore file
+.sp
+.if n \{\
+.RS 4
+.\}
+.nf
+# ndn\-extract\-public\-key > user\&.pem
+.fi
+.if n \{\
+.RE
+.\}
+.RE
+.sp
+.RS 4
+.ie n \{\
+\h'-04' 2.\h'+01'\c
+.\}
+.el \{\
+.sp -1
+.IP "  2." 4.2
+.\}
+Send out \(lquser\&.pem\(rq file to site operator, which signs and publishes key in NDN repos
+.RE
+.sp
+.RS 4
+.ie n \{\
+\h'-04' 3.\h'+01'\c
+.\}
+.el \{\
+.sp -1
+.IP "  3." 4.2
+.\}
+Site operator will return the signed key in form of a special \(lquser\&.pubcert\(rq file, containing 2 NDN ContentObjects:
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}
+Signed ContentObject for user\(cqs public key (/ndn/keys/<site>/<user>/<key\-hash>/\&...)
+.RE
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}
+Signed ContentObject for meta information about user\(cqs public key certification (/ndn/keys/<site>/<user>/"info"/<key\-hash>/\&...)
+.RE
+.RE
+.sp
+.RS 4
+.ie n \{\
+\h'-04' 4.\h'+01'\c
+.\}
+.el \{\
+.sp -1
+.IP "  4." 4.2
+.\}
+Installs received \(lquser\&.pubcert\(rq file
+.sp
+.if n \{\
+.RS 4
+.\}
+.nf
+# ndn\-install\-pubcert user\&.pubcert
+.fi
+.if n \{\
+.RE
+.\}
+.RE
+.SS "Additional requirements for macports users"
+.sp
+On mac with macports auto\-config script is running as ndnx user\&. The following three\-step process will perform all necessary signing and certification installing, assuming that macports are installed in /opt/local:
+.sp
+.RS 4
+.ie n \{\
+\h'-04' 1.\h'+01'\c
+.\}
+.el \{\
+.sp -1
+.IP "  1." 4.2
+.\}
+Extract macports public key (as super\-user)
+.sp
+.if n \{\
+.RS 4
+.\}
+.nf
+# sudo HOME=/opt/local/etc/ndnx ndn\-extract\-public\-key > ndnx\&.pem
+.fi
+.if n \{\
+.RE
+.\}
+.RE
+.sp
+.RS 4
+.ie n \{\
+\h'-04' 2.\h'+01'\c
+.\}
+.el \{\
+.sp -1
+.IP "  2." 4.2
+.\}
+Sign macports key and create \&.pubcert file
+.sp
+.if n \{\
+.RS 4
+.\}
+.nf
+# ndn\-sign\-key \-i "ndnx\-autoconfig" ndnx\&.pem
+.fi
+.if n \{\
+.RE
+.\}
+.RE
+.sp
+.RS 4
+.ie n \{\
+\h'-04' 3.\h'+01'\c
+.\}
+.el \{\
+.sp -1
+.IP "  3." 4.2
+.\}
+Install key to macports (as super\-user)
+.sp
+.if n \{\
+.RS 4
+.\}
+.nf
+# sudo HOME=/opt/local/etc/ndnx ndn\-install\-pubcert ndnx\&.pubcert
+.fi
+.if n \{\
+.RE
+.\}
+.RE
+.SH "EXIT STATUS"
+.PP
+\fB0\fR
+.RS 4
+Success
+.RE
+.PP
+\fB\-1\fR
+.RS 4
+Failure to automatically configure default route
+.RE
+.SH "AUTHOR"
+.sp
+Alexander Afanasyev

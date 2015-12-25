@@ -1,0 +1,29 @@
+# ndntestloop trampoline
+# 
+# Part of the NDNx distribution.
+#
+# Portions Copyright (C) 2013 Regents of the University of California.
+# 
+# Based on the CCNx C Library by PARC.
+# Copyright (C) 2011 Palo Alto Research Center, Inc.
+#
+# This work is free software; you can redistribute it and/or modify it under
+# the terms of the GNU General Public License version 2 as published by the
+# Free Software Foundation.
+# This work is distributed in the hope that it will be useful, but WITHOUT ANY
+# WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
+# FOR A PARTICULAR PURPOSE.
+#
+
+#
+# ndntestloop runs the ndnx unit tests repeatedly.
+#
+# This is intended to be run from the top level of the ndnx distribution.
+# Please refer to comments in csrc/util/ndntestloop.sh for more details.
+#
+
+if [ -f csrc/util/ndntestloop.sh ]; then
+	 exec sh csrc/util/ndntestloop.sh "$@"
+fi
+echo Error - ndntestloop is intended to be run at the top level of ndnx >&2
+exit 1

@@ -1,0 +1,51 @@
+#!/usr/bin/env bash
+
+function usage {
+    cat <<EOF
+Usage:
+    $0 [-h]
+
+      Path of the extracted key can be controlled through HOME or NDNX_DIR environmental variable.
+      If NDNX_DIR is set, the script will extract public key from $NDNX_DIR/.ndnx_keystore.
+      Otherwise, the script will attempt to extract public key from $HOME/.ndnx/.ndnx_keystore
+
+      Keystore password can be defined through NDNX_KEYSTORE_PASSWORD environment variable,
+      if not explicitly defined, the default NDNx keystore password will be used
+
+      Examples:
+
+         $0 > pubkey.pem
+         sudo HOME=/opt/local/etc/ndnx $0 > pubkey.pem
+         NDNX_DIR=key-dir $0 > pubkey.pem
+
+EOF
+  exit 1
+}
+
+function error {
+    echo -e "\E[91mERROR: $1\E[0m"
+}
+
+while getopts "h" flag; do
+    case "$flag" in
+        *)
+            usage
+            ;;
+    esac
+done
+
+if [ "x$NDNX_DIR" != "x" ]; then
+    KEYSTORE="$NDNX_DIR/.ndnx_keystore"
+else
+    KEYSTORE="$HOME/.ndnx/.ndnx_keystore"
+fi
+
+if [ ! -f "$KEYSTORE" ]; then
+    error "[$KEYSTORE] file not found or insufficient permissions to read the file"
+    error "Please check permissions or configure NDNX_DIR or HOME variables"
+    exit 1
+fi
+
+export KEY_PASSWORD=${NDNX_KEYSTORE_PASSWORD:-"Th1s1sn0t8g00dp8ssw0rd."}
+
+openssl pkcs12 -in "$KEYSTORE" -password env:KEY_PASSWORD -clcerts -nokeys -nomacver | openssl x509

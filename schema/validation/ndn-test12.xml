@@ -1,0 +1,41 @@
+<?xml version="1.0"?>
+<NDNProtocolDataUnit>
+  <ContentObject>
+    <Signature>
+      <SignatureBits ndnbencoding="base64Binary">okEd7rqcA9aY6ZQ4kYpHgPZKIMseZz2qrUxBYjsA0cF9P6cbM9O7FSo7</SignatureBits>
+    </Signature>
+    <Name>
+      <Component ndnbencoding="base64Binary">dmdxO6LZm7ZZoUdyt6EG3KrnkNJkjdaayBppbvfD</Component>
+    </Name>
+    <SignedInfo>
+      <PublisherPublicKeyDigest ndnbencoding="base64Binary">AwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwM=</PublisherPublicKeyDigest>
+      <Timestamp ndnbencoding="base64Binary">BIx7ZoZm</Timestamp>
+      <Type ndnbencoding="base64Binary">DATA</Type>
+    </SignedInfo>
+    <Content ndnbencoding="base64Binary"/>
+  </ContentObject>
+  <ContentObject>
+    <Signature>
+      <SignatureBits ndnbencoding="base64Binary">okEd7rqcA9aY6ZQ4kYpHgQZKIMseZz2qrUxBYjsA0cF9P6cbM9O7FSo7</SignatureBits>
+    </Signature>
+    <Name>
+      <Component ndnbencoding="base64Binary">dmdxO6LZm7UUoUdyt6EG3KrnkNJkjdaayBppbvfD</Component>
+    </Name>
+    <SignedInfo>
+      <PublisherPublicKeyDigest ndnbencoding="base64Binary">AwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwM=</PublisherPublicKeyDigest>
+      <Timestamp ndnbencoding="base64Binary">BHsH67bp</Timestamp>
+      <Type ndnbencoding="base64Binary">DATA</Type>
+      <FreshnessSeconds>42</FreshnessSeconds>
+      <KeyLocator>
+        <KeyName>
+          <Name>
+            <Component ndnbencoding="base64Binary">dGVzdA==</Component>
+            <Component ndnbencoding="base64Binary">c21ldHRlcnM=</Component>
+            <Component ndnbencoding="base64Binary">a2V5</Component>
+          </Name>
+        </KeyName>
+      </KeyLocator>
+    </SignedInfo>
+    <Content ndnbencoding="base64Binary"/>
+  </ContentObject>
+</NDNProtocolDataUnit>

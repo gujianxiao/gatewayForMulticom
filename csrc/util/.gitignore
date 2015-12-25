@@ -1,0 +1,11 @@
+Makefile
+ndnd-publish-local-info
+ndndlogging
+ndndstart
+ndndstatus
+ndndstop
+ndntestloop
+ndnget
+ndnput
+ndnrpolicyedit
+depend

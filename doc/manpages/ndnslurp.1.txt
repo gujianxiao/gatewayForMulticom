@@ -1,0 +1,34 @@
+NDNSLURP(1)
+=========
+
+NAME
+----
+ndnslurp - Print names of all content in a specified part of the NDNx namespace
+
+SYNOPSIS
+--------
+*ndnslurp* [-h] 'URI'
+
+DESCRIPTION
+-----------
+The *ndnslurp* utility retrieves content published under 'URI'
+and writes the names in NDNX URI encoding to stdout.
+
+The 'URI' must be specified using the NDNx URI encoding
+syntax. For simple cases of ASCII name components this is just
+pathname syntax with / delimiters.
+
+*ndnslurp* will exit when there are no new responses during a 1-second interval.
+
+OPTIONS
+-------
+*-h*::
+     Generate the help message.
+
+EXIT STATUS
+-----------
+*0*::
+     Success
+
+*1*::
+     Failure (syntax or usage error)

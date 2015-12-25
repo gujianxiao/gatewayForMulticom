@@ -1,0 +1,58 @@
+ * Portions Copyright (C) 2013 Regents of the University of California.
+ * 
+ * Based on the CCNx C Library by PARC.
+ Copyright (C) 2011 Palo Alto Research Center, Inc.
+ 
+ This work is free software; you can redistribute it and/or modify it under
+ the terms of the GNU General Public License version 2 as published by the
+ Free Software Foundation.
+ This work is distributed in the hope that it will be useful, but WITHOUT ANY
+ WARRANTY; without even the implied warranty of MERCHANTABILITY or
+ FITNESS FOR A PARTICULAR PURPOSE. See the GNU General Public License
+ for more details. You should have received a copy of the GNU General Public
+ License along with this program; if not, write to the
+ Free Software Foundation, Inc., 51 Franklin Street, Fifth Floor,
+ Boston, MA 02110-1301, USA.
+
+
+This directory contains an example of extending 'ndnb' encoding/decoding to other Java
+data types.  It includes JUnit tests for the encoder/decoder.  It also includes tests
+for the XML schema.
+
+There are 2 components that are required to extend the use of 'ndnb'.  The first is
+specifying the XML 'schema' that defines the extensions.  The second is the Java code 
+the implements the schema.
+
+The './schema' directory contains the following files:
+
+	example.xsd
+		This file defines the schema used in these examples.
+
+	tagname.csvdict
+		This file define the XML tags for use with the NDNx 'ndnb' tools.  (See the man pages for ndn_ndnbtoxml and ndn_xmltondnb.)
+	
+	validate.sh
+		This script sets up and runs the tests defined for this schema.
+
+	2-integers-test01.xml
+	complicated-test01.xml
+	complicated-test02.xml
+		These XML source files are used by validate.sh to ensure that the schema defined by example.xsd correctly parses the test XML files.
+
+
+The following files implement the schema described by example.xsd:
+
+	src/org/ndnx/ndn/apps/examples/ndnb/ExampleDictionary.java
+	src/org/ndnx/ndn/apps/examples/ndnb/ExampleDTags.java
+	src/org/ndnx/ndn/apps/examples/ndnb/Example2Integers.java
+	src/org/ndnx/ndn/apps/examples/ndnb/ExampleComplicated.java
+	src/org/ndnx/ndn/apps/examples/ndnb/Enumeration.java
+	src/org/ndnx/ndn/apps/examples/ndnb/StringBinaryVector.java
+
+The JUnit test implemented for this example are in:
+
+	src/org/ndnx/ndn/apps/examples/ndnb/test/ExampleEncodeDecodeTest.java
+
+
+
+

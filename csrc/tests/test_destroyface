@@ -1,0 +1,82 @@
+# tests/test_destroyface
+# 
+# Part of the NDNx distribution.
+#
+# Portions Copyright (C) 2013 Regents of the University of California.
+# 
+# Based on the CCNx C Library by PARC.
+# Copyright (C) 2009-2011 Palo Alto Research Center, Inc.
+#
+# This work is free software; you can redistribute it and/or modify it under
+# the terms of the GNU General Public License version 2 as published by the
+# Free Software Foundation.
+# This work is distributed in the hope that it will be useful, but WITHOUT ANY
+# WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
+# FOR A PARTICULAR PURPOSE.
+#
+AFTER : test_single_ndnd test_newface test_prefixreg
+BEFORE : test_single_ndnd_teardown
+
+# By default, we'll destroy the face that test_newface made.
+: ${FACEID:=`ndnbx -d newface-response.ndnb Content | ndnbx -d - FaceID`}
+echo FACEID=$FACEID
+
+rm -f destroyface*.ndnb
+ndndsmoketest || SkipTest no ndnd
+
+# Get our NDNDID
+. test_ndndid
+
+# Create the body of a face destroy request.
+ndn_xmltondnb -w - <<EOF >destroyface.ndnb
+<FaceInstance>
+  <Action>destroyface</Action>
+  <PublisherPublicKeyDigest ndnbencoding="hexBinary">$NDNDID</PublisherPublicKeyDigest>
+  <FaceID>$FACEID</FaceID>
+</FaceInstance>
+EOF
+
+# The name does not matter for the request, but make it unique.
+REQNAME=`openssl dgst -sha1 destroyface.ndnb | sed -e 's/^.*=[ ]*//'`
+
+echo REQNAME is $REQNAME >&2
+
+cat destroyface.ndnb | ndnpoke -f -x 30 /$REQNAME
+
+ndnslurp /$REQNAME
+
+# Pull it out to use in the destroyface request.  Base-64 encode it for the benefit of the shell.
+DFBLOB="`ndnpeek /$REQNAME | openssl enc -base64`"
+
+echo DFBLOB is $DFBLOB >&2
+
+test -z "$DFBLOB" && Failed forming DFBLOB
+
+# Now construct the interest.
+
+cat <<EOF >destroyface-request.xml
+<Interest>
+  <Name>
+    <Component ndnbencoding="text">ndnx</Component>
+    <Component ndnbencoding="hexBinary">$NDNDID</Component>
+    <Component ndnbencoding="text">destroyface</Component>
+    <Component ndnbencoding="base64Binary">$DFBLOB</Component>
+  </Name>
+  <Scope>1</Scope>
+</Interest>
+EOF
+ndn_xmltondnb -w destroyface-request.xml || Fail botch constructing destroyface-request.ndnb
+
+NDNDStatus > destroyface-pre.html
+
+# Try out the destroyface request
+ndndsmoketest -b -t 4000 send destroyface-request.ndnb recv > destroyface-response.ndnb
+
+NDNDStatus > destroyface-post.html
+
+cmp -s /dev/null destroyface-response.ndnb && Fail did not get destroyface response
+
+ndn_ndnbtoxml destroyface-response.ndnb || Fail could not parse destroyface response
+
+ndnbx -d destroyface-response.ndnb Content | ndn_ndnbtoxml -x -
+rm destroyface-request.xml

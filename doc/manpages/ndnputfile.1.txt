@@ -1,0 +1,106 @@
+NDNPUTFILE(1)
+=============
+
+NAME
+----
+ndnputfile - publish a file as NDNx content
+
+SYNOPSIS
+--------
+*ndnputfile* [-javaopts '<options>'] [-debug '<portno>'] [-v] [-raw] [-unversioned] [-local | -allownonlocal] [-timeout 'millis'] [-log 'LEVEL'] [-as 'pathToKeystore'] [-ac]  'ndnxname' 'filename|url'
+
+DESCRIPTION
+-----------
+The *ndnputfile* utility publishes a local file 'filename' or url 'url' as
+content with the 'ndnxname'. The content is published as a collection of NDNx
+Data in
+accordance with the naming conventions for segmented streams or files,
+optionally unversioned. For the default case of versioned content, *ndnputfile*
+will publish content with the version based on the local machine time.
+
+The 'ndnxname' must be specified using the NDNx URI encoding
+syntax. For simple cases of ASCII name components this is just
+pathname syntax with / delimiters.
+
+The 'filename' must be the pathname of a local file that will published under
+the 'ndnxname'.
+
+The 'url' must be a valid url to be published under a 'ndnxname'.
+
+*ndnputfile* will publish versioned and segmented content objects, and the key
+used to sign them, to a repository by default. If the '-local' flag is used, a
+local repository on the same device will be used.  If there is not a reachable
+repository, *ndnputfile* will exit with a 'wait for put drain' error.  If
+there is a corresponding application able to retrieve the content (e.x.
+*ndngetfile*) *ndnputfile* can be used to publish the content with '-raw'. 
+'-raw' allows *ndnputfile* to skip the repository handshake and directly put
+the content objects to satisfy the *ndngetfile* interests.
+
+*ndnputfile* can also be used to publish content with a specific key using
+'-as' where 'pathToKeystore' must be a valid path to the local filesystem
+where a user key has previously been stored.
+
+*ndnputfile* can additionally be used with access control using the '-ac' flag.
+
+OPTIONS
+-------
+*-v*::
+     Run *ndnputfile* in verbose mode.
+
+*-raw*::
+     *ndnputfile* will publish the content objects without contacting a
+     repository.  This mode will fail unless there is another application,
+     such as *ndngetfile*, running.
+
+*-unversioned*::
+     Do not append a version component to the supplied 'ndnxname'. This option
+     may be used when the supplied 'ndnxname' already includes an explicit
+     version component at the end (which must be URI encoded). This option may
+     also be used for content that is organized according to the
+     segmentation convention but does not use the versioning
+     convention at all. When this option is used, the FileOutputStream
+     abstraction will not be used, since that implies versioning.
+
+*-local*::
+     Specifies that a local repository be used to save the file.
+     This is the (new, as of release 0.5.0) default behavior.
+
+*-allownonlocal*::
+     Specifies that either a local or non-local repository be used to save the file.
+
+*-timeout* 'millis'::
+     Set the timeout that will be used for putting content objects on
+     during the stream reading. I.e., the time to wait for incoming interests.
+
+*-log* 'LEVEL'::
+     Set the logging level. 'LEVEL' must be the an acceptable Java
+     Logger level: either an integer or a level name (e.g. SEVERE).
+
+*-as* 'pathToKeystore'::
+     Set the user for signing published content.  This must point to a place
+     in the filesystem where ndnx compatible keys have been saved.
+
+*-ac*::
+     This options forces *ndnputfile* to obey access control restrictions. The
+     content is encrypted according to the access control list in force at the
+     node where the content is stored.
+
+*-debug* 'portno'::
+	Allows attachment of an eclipse remote debugger to the utility at the specified port number.
+
+*-javaopts* 'options'::
+	Allows use of arbitrary java properties or options with the utility.
+
+EXIT STATUS
+-----------
+*0*::
+     Success
+
+*1*::
+     Failure (syntax or usage error; publishing error - no processes running that are prepared to ask or already asking for content)
+
+AUTHOR
+------
+Diana Smetters
+
+

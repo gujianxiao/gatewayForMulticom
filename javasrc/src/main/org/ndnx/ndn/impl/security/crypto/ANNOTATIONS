@@ -1,0 +1,4 @@
+/**
+ * @package org.ndnx.ndn.impl.security.crypto
+ * Core implementation of signing and encryption for the NDNx Java library.
+ */

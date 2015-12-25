@@ -1,0 +1,35 @@
+NDNDSTOP(1)
+===========
+
+NAME
+----
+ndndstop - Stop ndnd
+
+SYNOPSIS
+--------
+*ndndstop*
+
+DESCRIPTION
+-----------
+The *ndndstop* utility shuts down *ndnd* cleanly.
+
+OPTIONS
+-------
+
+This utility does have have flags or arguments.
+
+The 'NDN_LOCAL_PORT' environment variable may be used to identify
+the port that the *ndnd* instance is using; if unset, the default
+port number (9695) is used.
+
+EXIT STATUS
+-----------
+*0*::
+     Success - the *ndnd* was running and was shut down successfully.
+
+*1*::
+     Failure - probably means that  *ndnd* was not running.
+
+AUTHOR
+------
+Michael Plass

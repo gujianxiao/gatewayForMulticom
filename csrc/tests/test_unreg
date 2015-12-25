@@ -1,0 +1,78 @@
+# tests/test_unreg
+# 
+# Part of the NDNx distribution.
+#
+# Portions Copyright (C) 2013 Regents of the University of California.
+# 
+# Based on the CCNx C Library by PARC.
+# Copyright (C) 2009-2011 Palo Alto Research Center, Inc.
+#
+# This work is free software; you can redistribute it and/or modify it under
+# the terms of the GNU General Public License version 2 as published by the
+# Free Software Foundation.
+# This work is distributed in the hope that it will be useful, but WITHOUT ANY
+# WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
+# FOR A PARTICULAR PURPOSE.
+#
+AFTER : test_single_ndnd test_ndndid test_newface test_prefixreg
+BEFORE : test_single_ndnd_teardown test_destroyface
+
+ndndsmoketest || SkipTest no ndnd
+test -f newface-response.ndnb || SkipTest missing newface-response.ndnb, need to run test_newface first
+
+FACEID=`ndnbx -d newface-response.ndnb Content | ndnbx -d - FaceID` || Fail
+echo FACEID=$FACEID
+
+# We have the NDNDID of our ndnd in a file, left from test_ndndid
+NDNDID=`cat ndndid.out`
+
+# Create the body of a unreg request.
+ndn_xmltondnb -w - <<EOF >unreg.ndnb
+<ForwardingEntry>
+  <Action>unreg</Action>
+  <Name>
+     <Component ndnbencoding="text">Junk</Component>
+  </Name>
+  <PublisherPublicKeyDigest ndnbencoding="hexBinary">$NDNDID</PublisherPublicKeyDigest>
+  <FaceID>$FACEID</FaceID>  
+</ForwardingEntry>
+EOF
+
+TNAME=`GenSym _ignored_`
+cat unreg.ndnb | ndnpoke -f -x 30 /$TNAME
+
+# Pull it out to use in the unreg request.  Base-64 encode it for the benefit of the shell.
+
+PRBLOB="`ndnpeek /$TNAME | openssl enc -base64`"
+
+echo PRBLOB is $PRBLOB >&2
+
+# Now construct the interest.
+
+cat <<EOF >unreg-request.xml
+<Interest>
+  <Name>
+    <Component ndnbencoding="text">ndnx</Component>
+    <Component ndnbencoding="hexBinary">$NDNDID</Component>
+    <Component ndnbencoding="text">unreg</Component>
+    <Component ndnbencoding="base64Binary">$PRBLOB</Component>
+  </Name>
+  <Scope>1</Scope>
+</Interest>
+EOF
+ndn_xmltondnb -w unreg-request.xml || Fail botch constructing unreg-request.ndnb
+
+NDNDStatus > unreg-pre.html
+
+# Try out the request
+ndndsmoketest -b send unreg-request.ndnb recv > unreg-response.ndnb
+
+cmp -s /dev/null unreg-response.ndnb && Fail did not get unreg response
+ndn_ndnbtoxml unreg-response.ndnb || Failed to parse unreg response
+
+ndnbx -d unreg-response.ndnb Content | ndn_ndnbtoxml -x -
+
+NDNDStatus > unreg-post.html
+
+grep 'ndn:/Junk ' unreg-post.html && Fail prefix is still registered
+rm unreg-request.xml

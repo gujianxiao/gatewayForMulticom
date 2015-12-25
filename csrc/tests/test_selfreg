@@ -1,0 +1,78 @@
+# tests/test_selfreg
+# 
+# Part of the NDNx distribution.
+#
+# Portions Copyright (C) 2013 Regents of the University of California.
+# 
+# Based on the CCNx C Library by PARC.
+# Copyright (C) 2009 Palo Alto Research Center, Inc.
+#
+# This work is free software; you can redistribute it and/or modify it under
+# the terms of the GNU General Public License version 2 as published by the
+# Free Software Foundation.
+# This work is distributed in the hope that it will be useful, but WITHOUT ANY
+# WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
+# FOR A PARTICULAR PURPOSE.
+#
+AFTER : test_single_ndnd test_ndndid
+BEFORE : test_single_ndnd_teardown
+
+ndndsmoketest || SkipTest no ndnd
+test -f newface-response.ndnb || SkipTest missing newface-response.ndnb, need to run test_newface first
+
+# Create the body of a selfreg request.
+ndn_xmltondnb -w - <<EOF >selfreg.ndnb
+<ForwardingEntry>
+  <Action>selfreg</Action>
+  <Name>
+     <Component ndnbencoding="text">Junk</Component>
+     <Component ndnbencoding="text">Testing</Component>
+     <Component ndnbencoding="text">Selfreg</Component>
+  </Name>
+  <FreshnessSeconds>19</FreshnessSeconds>
+</ForwardingEntry>
+EOF
+
+TNAME=`GenSym SR`
+cat selfreg.ndnb | ndnpoke -f -x 30 /$TNAME
+
+# Pull it out to use in the selfreg request.  Base-64 encode it for the benefit of the shell.
+
+SRBLOB="`ndnpeek /$TNAME | openssl enc -base64`"
+
+echo SRBLOB is $SRBLOB >&2
+
+# We have the NDNDID of our ndnd in a file, left from test_ndndid
+NDNDID=`cat ndndid.out`
+
+# Now construct the interest.
+
+cat <<EOF >selfreg-request.xml
+<Interest>
+  <Name>
+    <Component ndnbencoding="text">ndnx</Component>
+    <Component ndnbencoding="hexBinary">$NDNDID</Component>
+    <Component ndnbencoding="text">selfreg</Component>
+    <Component ndnbencoding="base64Binary">$SRBLOB</Component>
+  </Name>
+  <Scope>1</Scope>
+</Interest>
+EOF
+ndn_xmltondnb -w selfreg-request.xml || Fail botch constructing selfreg-request.ndnb
+
+NDNDStatus > selfreg-pre.html
+
+# Try out the request; use udp so our face does not instantly vanish
+# Send a heartbeat first to convince ndnd to trust us to selfreg
+dd if=/dev/zero bs=1 count=1 > heartbeat.ndnb
+ndndsmoketest -u localhost -b send heartbeat.ndnb send selfreg-request.ndnb recv > selfreg-response.ndnb
+
+cmp -s /dev/null selfreg-response.ndnb && Fail did not get selfreg response
+ndn_ndnbtoxml selfreg-response.ndnb || Failed to parse selfreg response
+
+ndnbx -d selfreg-response.ndnb Content | ndn_ndnbtoxml -x -
+
+NDNDStatus > selfreg-post.html
+grep ndn:/Junk/Testing/Selfreg selfreg-post.html >/dev/null || Fail Self-registered prefix does not show up in ndnd status
+
+rm selfreg-request.xml

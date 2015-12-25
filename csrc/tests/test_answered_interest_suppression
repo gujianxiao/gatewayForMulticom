@@ -1,0 +1,76 @@
+# tests/test_answered_interest_suppression
+# 
+# Part of the NDNx distribution.
+#
+# Portions Copyright (C) 2013 Regents of the University of California.
+# 
+# Based on the CCNx C Library by PARC.
+# Copyright (C) 2011 Palo Alto Research Center, Inc.
+#
+# This work is free software; you can redistribute it and/or modify it under
+# the terms of the GNU General Public License version 2 as published by the
+# Free Software Foundation.
+# This work is distributed in the hope that it will be useful, but WITHOUT ANY
+# WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
+# FOR A PARTICULAR PURPOSE.
+#
+
+#
+# Test to verify that similar interests from different faces
+# all get answered.
+#
+
+#
+# Construct the test interest
+#
+UNIQ=`GenSym TIS`
+ndn_xmltondnb -w - <<EOF >answered.ndnb
+<Interest>
+  <Name>
+    <Component ndnbencoding="text">answered</Component>
+    <Component ndnbencoding="text">test</Component>
+    <Component ndnbencoding="text">$UNIQ</Component>
+  </Name>
+</Interest>
+EOF
+
+rm -rf suppr-*.out
+
+#
+# Start up a private ndnd.
+#
+WithNDND 5 env NDND_DEBUG=-1 ndnd 2>ndnd5.out &
+WithNDND 5 ndndsmoketest        # Let forked ndnd get going
+trap "WithNDND 5 ndndstop" 0    # Tear it down at end of test
+
+
+# The heart of the the test
+HasEverybodyGotIt () {
+    # One client is just a sink for the interests.
+    ndnpoke -x 1 /answered < /dev/null &
+    
+    #
+    # Get 3 clients to be interested.
+    #
+    for i in 1 2 3;
+      do ndndsmoketest -t 100 -b recv answered.ndnb timeo 4000 recv > suppr-$i.out &
+    done
+
+    # Provide the answer.
+    sleep 1
+    ndndstatus
+    echo "This is the answer" | ndnpoke -f -x 1 /answered/test/$UNIQ
+
+    # The clients should finish quickly now - give them a second.
+    sleep 1
+    ndndstop
+}
+
+WithNDND 5 HasEverybodyGotIt
+
+for i in suppr-*.out; do strings -a $i > strings-$i; done
+COUNT=`grep -l "This is the answer" strings-suppr-*.out | wc -l`
+rm -f strings-suppr-*.out
+test "$COUNT" -eq 3 || Fail expecting 3 answers, but got $COUNT
+
+rm -rf answered.ndnb suppr-*.out

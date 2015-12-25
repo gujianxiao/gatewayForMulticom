@@ -1,0 +1,4 @@
+/**
+ * @package org.ndnx.ndn.profiles.security.access.group
+ * Implementation of a group-based %access control scheme on top of NDNx's pluggable %access control framework.
+ */
